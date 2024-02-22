@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JpaBuddyIdeaProjectConfig" ddlActionDbType="postgres" newRepositoryParent="org.springframework.data.jpa.repository.JpaRepository">
+    <option name="defaultUnitInitialized" value="true" />
+    <option name="renamerInitialized" value="true" />
+    <option name="reverseEngineeringLastDbConnectionId" value="bdef53a4-9fdb-4760-918c-716ed00ba05f" />
+    <option name="reLastEntityCreationPackage" value="src/main/java/pl/dlusk/infrastructure/database/entity" />
+  </component>
+</project>

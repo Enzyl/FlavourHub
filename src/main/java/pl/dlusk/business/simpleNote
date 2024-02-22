@@ -1,0 +1,15 @@
+Oddzielne serwisy dla:
+- Client
+- FoodOrder
+- Owner
+- Payment
+- Restaurant
+- Review
+
+Brak serwisu dla:
+- OrderItem <- zarządzane będzie przez FoodOrder
+- Menu i MenuItem <- zarządzane będą przez Restaurant
+- RestaurantAddress <- zarządzane będzie przez Restaurant
+- RestaurantDeliveryArea <- brak, logika dotycząca tego bedzie osadzona w Restaurant
+- RestaurantDeliveryStreet - to ulica na którą dostarczane jest jedzenie, więc będzie zarządzane to przez Restaurant
+- Review - bedzie w Restaurant
