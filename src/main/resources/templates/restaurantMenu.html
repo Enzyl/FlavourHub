@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu Restauracji</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 th:text="${menu.name}">Nazwa Menu</h1>
+    <p th:text="${menu.description}">Opis Menu</p>
+
+    <h2>Pozycje w Menu</h2>
+    <div th:if="${#lists.size(menu.menuItems) == 0}">
+        <p>Brak pozycji w menu.</p>
+    </div>
+    <div th:unless="${#lists.size(menu.menuItems) == 0}">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Nazwa</th>
+                <th>Opis</th>
+                <th>Kategoria</th>
+                <th>Cena</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="menuItem : ${menu.menuItems}">
+                <td th:text="${menuItem.name}">Nazwa Pozycji</td>
+                <td th:text="${menuItem.description}">Opis Pozycji</td>
+                <td th:text="${menuItem.category}">Kategoria</td>
+                <td th:text="${menuItem.price}">Cena</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <a th:href="@{/}" class="btn btn-primary">Powrót do listy restauracji</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

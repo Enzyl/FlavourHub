@@ -8,7 +8,6 @@ import pl.dlusk.infrastructure.database.entity.RestaurantDeliveryAreaEntity;
 import java.util.List;
 
 @Repository
-
 public interface RestaurantDeliveryAreaJpaRepository extends JpaRepository<RestaurantDeliveryAreaEntity, Long> {
     @Query("Select rda FROM RestaurantDeliveryAreaEntity rda WHERE rda.deliveryStreet.streetName = :streetName")
     List<RestaurantDeliveryAreaEntity> findByStreetName(String streetName);

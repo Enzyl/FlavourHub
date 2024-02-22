@@ -13,4 +13,3 @@ DROP TABLE IF EXISTS restaurant_address CASCADE;
 DROP TABLE IF EXISTS food_ordering_app_user CASCADE;
 DROP TABLE IF EXISTS restaurant_delivery_street CASCADE;
 
-DROP TABLE IF EXISTS flyway_schema_history CASCADE;

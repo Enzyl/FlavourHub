@@ -1,12 +1,13 @@
 package pl.dlusk.business;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 
 import java.util.List;
-
+@Slf4j
 @Service
 @AllArgsConstructor
 public class RestaurantService {
@@ -18,7 +19,7 @@ public class RestaurantService {
     }
 
     public Restaurant getRestaurantById(Long restaurantId) {
-        return restaurantDAO.findById(restaurantId);
+        return restaurantDAO.findRestaurantById(restaurantId);
     }
 
     public Restaurant addRestaurant(Restaurant restaurant, RestaurantAddress address, Owner owner) {
@@ -40,6 +41,7 @@ public class RestaurantService {
     }
 
     public List<Restaurant> getRestaurantsDeliveringToArea(String streetName) {
+        log.info("########## RestaurantService ##### getRestaurantsDeliveringToArea #### WEJŚCIE: " + streetName );
         return restaurantDAO.getRestaurantsDeliveringToArea(streetName);
 
     }
