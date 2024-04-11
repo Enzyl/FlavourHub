@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dodawanie ulic dostawy</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Dodawanie ulic dostawy dla restauracji</h2>
+    <div th:if="${not #lists.isEmpty(restaurantDeliveryAreas)}">
+        <h3>Obecne ulice dostawy:</h3>
+        <ul>
+            <li th:each="area : ${restaurantDeliveryAreas}">
+                Ulica: <span th:text="${area.deliveryStreet.streetName}"></span>,
+                Kod pocztowy: <span th:text="${area.deliveryStreet.postalCode}"></span>,
+                Dzielnica: <span th:text="${area.deliveryStreet.district}"></span>
+            </li>
+        </ul>
+    </div>
+    <div th:if="${#lists.isEmpty(restaurantDeliveryAreas)}">
+        <p>Aktualnie brak ulic dostawy. Dodaj nowe.</p>
+    </div>
+
+    <h3>Dodaj nową ulicę dostawy:</h3>
+    <form th:action="@{/addDeliveryStreet}" method="post">
+        <div class="form-group">
+            <label for="streetName">Nazwa ulicy:</label>
+            <input type="text" id="streetName" name="streetName" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="postalCode">Kod pocztowy:</label>
+            <input type="text" id="postalCode" name="postalCode" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="district">Dzielnica:</label>
+            <input type="text" id="district" name="district" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Dodaj ulicę</button>
+    </form>
+
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-secondary">Powrót do strony głównej</a>
+    </div>
+
+    <!-- Dodany guzik "Zakończ" -->
+    <div class="text-center mt-4">
+        <a th:href="@{/showAddMenuToTheRestaurantView}" class="btn btn-success">Zakończ</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

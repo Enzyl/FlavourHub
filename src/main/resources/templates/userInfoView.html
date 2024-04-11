@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Info</title>
+</head>
+<body>
+<div class="container">
+    <h2>User Information</h2>
+    <p>Username: <span th:text="${username}"></span></p>
+    <p>Authorities: <span th:text="${authorities}"></span></p>
+    <p>Session ID: <span th:text="${sessionID}"></span></p>
+
+    <h3>Session Attributes:</h3>
+    <div th:each="attrName : ${session.attributeNames}">
+        <p th:text="${attrName} + ': ' + ${session.getAttribute(attrName)}"></p>
+    </div>
+
+    <a th:href="@{/}" class="btn btn-primary">Return Home</a>
+</div>
+</body>
+</html>

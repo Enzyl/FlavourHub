@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Restauracji</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .restaurant-image {
+            width: 100%;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+        }
+        .restaurant-info {
+            padding: 20px;
+        }
+        .action-buttons {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="#">Dashboard Restauracji</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span th:text="${ownerUsername}">Nazwa Użytkownika</span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" th:href="@{/ownerProfile}">Profil użytkownika</a>
+                        <a class="dropdown-item" th:href="@{/ownerOrders}">Zamówienia</a>
+                        <a class="dropdown-item" th:href="@{/logout}">Wyloguj</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="restaurant-image" th:style="'background-image:url(' + ${restaurant.imagePath} + ')'"></div>
+
+<div class="container restaurant-info">
+    <h1 th:text="${restaurant.name}">Nazwa Restauracji</h1>
+    <p th:text="${restaurant.description}">Opis Restauracji</p>
+    <address th:text="${restaurant.address}">Adres Restauracji</address>
+
+    <div class="action-buttons">
+        <a th:href="@{/changeMenu}" class="btn btn-primary">Zmień menu</a>
+        <!-- Dodany przycisk 'Pokaż aktualne zamówienia' -->
+        <a th:href="@{/showOrdersInProgress}" class="btn btn-info">Pokaż aktualne zamówienia</a>
+    </div>
+
+</div>
+<!-- Sekcja Menu -->
+<!-- Sekcja Menu -->
+<div class="container menu-section">
+    <h2>Menu</h2>
+    <div th:if="${#lists.size(menu.menuItems) == 0}">
+        <p>Brak pozycji w menu.</p>
+    </div>
+    <div th:unless="${#lists.size(menu.menuItems) == 0}">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Nazwa</th>
+                <th>Opis</th>
+                <th>Kategoria</th>
+                <th>Cena</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="menuItem : ${menu.menuItems}">
+                <td th:text="${menuItem.name}">Nazwa Pozycji</td>
+                <td th:text="${menuItem.description}">Opis Pozycji</td>
+                <td th:text="${menuItem.category}">Kategoria</td>
+                <td th:text="${menuItem.price}">Cena</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

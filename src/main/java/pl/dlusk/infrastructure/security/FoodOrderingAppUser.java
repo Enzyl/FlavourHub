@@ -3,10 +3,13 @@ package pl.dlusk.infrastructure.security;
 import lombok.*;
 
 @With
-@Value
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Builder
 @EqualsAndHashCode(of = "username")
-@ToString(of = {"username", "email", "role", "enabled"})
+@ToString(of = {"userId","username", "email", "role", "enabled"})
+
 public class FoodOrderingAppUser {
     Long userId;
     String username;

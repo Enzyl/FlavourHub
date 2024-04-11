@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import pl.dlusk.domain.FoodOrder;
 import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
-import pl.dlusk.infrastructure.database.repository.mapper.FoodOrderEntityMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

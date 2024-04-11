@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Client Orders</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Your Orders</h2>
+    <div th:if="${not #lists.isEmpty(clientOrderHistory.customerFoodOrders)}" id="ordersAccordion">
+        <div th:each="order, stat : ${clientOrderHistory.customerFoodOrders}" class="card mb-2">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" th:href="'#orderDetails' + ${stat.index}">
+                    Order #<span th:text="${#lists.size(clientOrderHistory.customerFoodOrders) - stat.index}"></span> -
+                    <span th:text="${order.orderTime}">Order Time</span> from
+                    <span th:text="${order.restaurant.name}">Restaurant Name</span>
+                </a>
+            </div>
+            <div th:id="'orderDetails' + ${stat.index}" class="collapse" th:attr="data-parent='#ordersAccordion'">
+                <div class="card-body">
+                    <p>Status: <span th:text="${order.foodOrderStatus == 'Cancelled' ? 'Zamówienie anulowano' : order.foodOrderStatus}">Status</span></p>
+                    <p>Total Price: <span th:text="${order.totalPrice}">Total Price</span> PLN</p>
+
+                    <h6>Items Ordered:</h6>
+                    <ul>
+                        <li th:each="item : ${order.orderItems}">
+                            <span th:if="${item.menuItem != null}" th:text="${item.menuItem.name}">Item Name</span> -
+                            Price: <span th:text="${item.menuItem.price}">Price</span> PLN -
+                            Quantity: <span th:text="${item.quantity}">Quantity</span>
+                        </li>
+                    </ul>
+
+                    <h6>Payment:</h6>
+                    <p>Method: <span th:text="${order.payment.paymentMethod}">Payment Method</span></p>
+                    <p>Amount: <span th:text="${order.payment.paymentAmount}">Payment Amount</span> PLN</p>
+                </div>
+            </div>
+            <div th:if="${order.foodOrderStatus == 'Confirmed' and order.isCancellable()}" class="card-footer">
+                <form th:action="@{/cancelOrder}" method="post">
+                    <input type="hidden" name="orderId" th:value="${order.orderId}" />
+                    <button type="submit" class="btn btn-warning">Anuluj zamówienie</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div th:if="${#lists.isEmpty(clientOrderHistory.customerFoodOrders)}">
+        <p>You have no orders.</p>
+    </div>
+    <div class="text-center mt-4">
+        <a th:href="@{/clientLoggedInView}" class="btn btn-primary">Powrót do strony głównej</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

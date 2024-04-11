@@ -16,11 +16,12 @@ public interface FoodOrderEntityMapper {
     @Mapping(target = "payment", ignore = true)
     @Mapping(source = "id", target = "foodOrderId")
     @Mapping(source = "status", target = "foodOrderStatus")
+    @Mapping(source = "order_number", target = "orderNumber")
     FoodOrder mapFromEntity(FoodOrderEntity entity);
 
     @Mapping(source = "foodOrderId", target = "id")
     @Mapping(source = "foodOrderStatus", target = "status")
-
+    @Mapping(source = "orderNumber", target = "order_number")
     FoodOrderEntity mapToEntity(FoodOrder foodOrder);
 
 }

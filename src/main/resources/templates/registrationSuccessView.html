@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rejestracja zakończona sukcesem</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Rejestracja zakończona sukcesem!</h4>
+        <p>Dziękujemy za rejestrację. Teraz możesz się zalogować, aby korzystać z pełnej funkcjonalności strony.</p>
+        <hr>
+        <p class="mb-0">Jeśli masz jakiekolwiek pytania, skontaktuj się z nami.</p>
+    </div>
+
+    <a th:href="@{/login}" class="btn btn-primary">Przejdź do logowania</a>
+    <a th:href="@{/}" class="btn btn-secondary">Powrót do strony głównej</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

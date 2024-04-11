@@ -1,11 +1,14 @@
 package pl.dlusk.business.dao;
 
+import org.springframework.data.repository.query.Param;
 import pl.dlusk.domain.FoodOrder;
+import pl.dlusk.domain.OrderItem;
 import pl.dlusk.domain.Review;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface FoodOrderDAO {
     FoodOrder save(FoodOrder foodOrder); // Zapis nowego zamówienia lub aktualizacja istniejącego
@@ -18,4 +21,9 @@ public interface FoodOrderDAO {
     List<FoodOrder> findByDateRange(LocalDateTime start, LocalDateTime end); // Pobranie zamówień w określonym przedziale czasowym
 
     Review addReview(Long orderId, Review review);
+
+    Set<OrderItem> findOrderItemsByFoodOrderId(Long foodOrderId);
+    void updateFoodOrderStatus( Long orderId, String status);
+
+    FoodOrder findFoodOrderByFoodOrderNumber(String foodOrderNumber);
 }

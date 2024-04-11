@@ -27,4 +27,10 @@ public class PaymentRepository implements PaymentDAO {
         PaymentEntity savedPaymentEntity = paymentJpaRepository.save(paymentEntity);
         return paymentEntityMapper.mapFromEntity(savedPaymentEntity);
     }
+
+    @Override
+    public Payment findByFoodOrderId(Long foodOrderId) {
+        PaymentEntity paymentByFoodOrderEntityId = paymentJpaRepository.findPaymentByFoodOrderEntity_Id(foodOrderId);
+        return paymentEntityMapper.mapFromEntity(paymentByFoodOrderEntityId);
+    }
 }

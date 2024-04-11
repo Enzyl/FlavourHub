@@ -1,6 +1,7 @@
 package pl.dlusk.infrastructure.database.repository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 import pl.dlusk.business.dao.ClientDAO;
@@ -21,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Repository
 @AllArgsConstructor
 public class ClientRepository implements ClientDAO {
@@ -33,16 +34,25 @@ public class ClientRepository implements ClientDAO {
 
     @Override
     public Client save(Client client, FoodOrderingAppUser user) {
+        log.info("########## ClientRepository #### save #  Client: " + client.toString());
+        log.info("########## ClientRepository #### save #  FoodOrderingAppUser: " + user.toString());
+
         Optional<FoodOrderingAppUserEntity> existingUser = foodOrderingAppUserJpaRepository.findByUsername(user.getUsername());
-        Optional<ClientEntity> existingClientById = clientJpaRepository.findById(client.getClientId());
+        log.info("########## ClientRepository #### save #  existingUser " + existingUser);
+        Optional<ClientEntity> clientByUsername = clientJpaRepository.findByUsername(user.getUsername());
 
         if (existingUser.isPresent()) {
+            log.info("########## ClientRepository #### save #  existingUser.isPresent(): " + existingUser.isPresent());
             throw new UsernameAlreadyExistsException(user.getUsername());
+
         }
 
-        if (existingClientById.isPresent()) {
+        if (clientByUsername.isPresent()) {
+            log.info("########## ClientRepository #### save #  existingClientById.isPresent(): " + clientByUsername.isPresent());
+
             throw new UsernameAlreadyExistsException(client.getFullName());
         }
+        log.info("########## ClientRepository #### save #  ALL OK I GUESS: " );
 
         FoodOrderingAppUserEntity userEntity = foodOrderingAppUserEntityMapper.mapToEntity(user);
         FoodOrderingAppUserEntity savedUserEntity = foodOrderingAppUserJpaRepository.save(userEntity);
@@ -58,8 +68,10 @@ public class ClientRepository implements ClientDAO {
 
 
     @Override
-    public Client findById(Long id) {
-        return clientJpaRepository.findById(id)
+    public Client findByUserId(Long id) {
+        log.info("########## ClientRepo #### findById #  START # id: "+id );
+
+        return clientJpaRepository.findByUserId(id)
                 .map(clientEntityMapper::mapFromEntity)
                 .orElse(null);
     }
@@ -78,25 +90,35 @@ public class ClientRepository implements ClientDAO {
 
     @Override
     public void deactivateAccount(Long userId) {
-        // Pobranie encji użytkownika
         FoodOrderingAppUserEntity userEntity = foodOrderingAppUserJpaRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
-
-        // Deaktywacja konta użytkownika
         userEntity.setEnabled(false);
-
-        // Zapisanie zmian w bazie danych
         foodOrderingAppUserJpaRepository.save(userEntity);
     }
 
+    @Override
+    public Client findClientByOrderId(Long orderId) {
+        ClientEntity clientByFoodOrderId = clientJpaRepository.
+                findByFoodOrderId(orderId).orElseThrow(
+                () -> new RuntimeException("Client for the order with ID: " + orderId + " not found"));
+        return clientEntityMapper.mapFromEntity(clientByFoodOrderId);
+    }
 
+    @Override
+    public Client findClientByUsername(String username) {
+        ClientEntity clientEntity = clientJpaRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        return clientEntityMapper.mapFromEntity(clientEntity);
+    }
+
+    @Override
     public List<FoodOrder> findOrdersByClientId(Long clientId) {
-        return clientJpaRepository.findById(clientId)
+        return clientJpaRepository.findByUserId(clientId)
                 .map(ClientEntity::getFoodOrderEntities)
                 .orElse(Collections.emptySet())
                 .stream()
                 .map(foodOrderEntityMapper::mapFromEntity)
                 .collect(Collectors.toList());
     }
+
 
 }

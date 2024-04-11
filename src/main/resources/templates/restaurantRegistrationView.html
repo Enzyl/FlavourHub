@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rejestracja Restauracji</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Rejestracja Restauracji</h2>
+    <form th:action="@{/registerRestaurant}" th:object="${restaurant}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Nazwa Restauracji:</label>
+            <input type="text" id="name" class="form-control" th:field="*{name}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Opis:</label>
+            <textarea id="description" class="form-control" th:field="*{description}" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="imagePath">Ścieżka do obrazu:</label>
+            <input type="file" id="imagePath" class="form-control-file" th:field="*{imagePath}">
+        </div>
+
+        <h3>Adres Restauracji:</h3>
+        <div class="form-group">
+            <label for="city">Miasto:</label>
+            <input type="text" id="city" class="form-control" th:field="*{address.city}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="postalCode">Kod pocztowy:</label>
+            <input type="text" id="postalCode" class="form-control" th:field="*{address.postalCode}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="address">Adres:</label>
+            <input type="text" id="address" class="form-control" th:field="*{address.address}" required>
+        </div>
+
+        <!-- Tutaj możesz dodać więcej pól dotyczących dostaw, jeśli jest to konieczne -->
+
+        <button type="submit" class="btn btn-primary">Zarejestruj Restaurację</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

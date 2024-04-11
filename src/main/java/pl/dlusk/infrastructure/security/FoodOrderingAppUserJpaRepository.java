@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface FoodOrderingAppUserJpaRepository extends JpaRepository<FoodOrderingAppUserEntity, Long> {
 
     Optional<FoodOrderingAppUserEntity> findByUsername(String username);
+    Optional<FoodOrderingAppUserEntity> findByEmail(String email);
 }

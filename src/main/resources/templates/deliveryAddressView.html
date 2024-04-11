@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Address</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Delivery Address</h2>
+    <form th:action="@{/submitDeliveryAddress}" method="post">
+        <div class="mb-3">
+            <label for="streetName" class="form-label">Street Name:</label>
+            <input type="text" class="form-control" id="streetName" name="streetName" required>
+        </div>
+        <div class="mb-3">
+            <label for="buildingNumber" class="form-label">Building Number:</label>
+            <input type="text" class="form-control" id="buildingNumber" name="buildingNumber" required>
+        </div>
+        <div class="mb-3">
+            <label for="apartmentNumber" class="form-label">Apartment Number:</label>
+            <input type="text" class="form-control" id="apartmentNumber" name="apartmentNumber">
+        </div>
+        <div class="mb-3">
+            <label for="postalCode" class="form-label">Postal Code:</label>
+            <input type="text" class="form-control" id="postalCode" name="postalCode" required>
+        </div>
+        <div class="mb-3">
+            <label for="city" class="form-label">City:</label>
+            <input type="text" class="form-control" id="city" name="city" required>
+        </div>
+        <div class="mb-3">
+            <label for="additionalInstructions" class="form-label">Additional Instructions:</label>
+            <textarea class="form-control" id="additionalInstructions" name="additionalInstructions" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Confirm Address</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

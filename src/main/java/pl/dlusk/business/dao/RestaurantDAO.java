@@ -6,16 +6,35 @@ import java.util.List;
 import java.util.Set;
 
 public interface RestaurantDAO {
-    List<Restaurant> getRestaurantsByOwnerId(Long ownerId);
-    Restaurant findRestaurantById(Long restaurantId);
-    List<Restaurant> getAllRestaurants();
-    Restaurant addRestaurant(Restaurant restaurant, RestaurantAddress address, Owner owner);
-    Restaurant updateRestaurant(Long restaurantId, Restaurant restaurantDetails);
-    void delete(Long restaurantId);
-    Menu getMenuRestaurantById(Long restaurantId);
-    List<Restaurant> getRestaurantsDeliveringToArea(String streetName);
+    Restaurant getRestaurantByOwnerId(Long ownerId);
 
-    List<Review> getReviewsByRestaurantId(Long restaurantId);
+    Restaurant findRestaurantById(Long restaurantId);
+
+    List<Restaurant> findAllRestaurants();
+
+    Restaurant addRestaurant(Restaurant restaurant, RestaurantAddress address, Owner owner);
+
+    Restaurant updateRestaurant(Long restaurantId, Restaurant restaurantDetails);
+
+    void delete(Long restaurantId);
+
+    Menu findMenuRestaurantById(Long restaurantId);
+
+    List<Review> findReviewsByRestaurantId(Long restaurantId);
+
     Set<MenuItem> findMenuItemsByMenuId(Long menuId);
 
+    MenuItem findMenuItemById(Long menuItemId);
+
+    List<Restaurant> findRestaurantsDeliveringToArea(String streetName);
+
+    Restaurant findRestaurantByUsername(String username);
+
+    Restaurant findRestaurantByFoodOrderId(Long foodOrderId);
+    Menu save(Menu menu);
+    void saveMenuItem(MenuItem menuItem, Menu menu);
+    void deleteMenu(Menu menu);
+
+    List<RestaurantDeliveryArea> findDeliveryAreasByRestaurantId(Long restaurantId);
+    void addDeliveryAreaForRestaurant(Long restaurantId, RestaurantDeliveryStreet newDeliveryStreet);
 }

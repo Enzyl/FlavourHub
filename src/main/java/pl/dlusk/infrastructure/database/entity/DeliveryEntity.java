@@ -19,7 +19,7 @@ public class DeliveryEntity {
     @Column(name = "delivery_address", nullable = false)
     private String deliveryAddress;
 
-    @Column(name = "delivery_time", nullable = false)
+    @Column(name = "delivery_time")
     private LocalDateTime deliveryTime;
 
     @Column(name = "delivery_status", nullable = false, length = 50)

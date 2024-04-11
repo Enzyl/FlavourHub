@@ -1,0 +1,45 @@
+<!-- registerClient.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Rejestracja Klienta</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h2>Rejestracja Klienta</h2>
+    <form th:action="@{/registerClient}" th:object="${client}" method="post">
+
+        <div class="mb-3">
+            <label for="fullName" class="form-label">Imię i nazwisko:</label>
+            <input type="text" class="form-control" id="fullName" th:field="*{fullName}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="phoneNumber" class="form-label">Numer telefonu:</label>
+            <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="username" class="form-label">Nazwa użytkownika:</label>
+            <input type="text" class="form-control" id="username" th:field="*{user.username}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Hasło:</label>
+            <input type="password" class="form-control" id="password" th:field="*{user.password}" required/>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email:</label>
+            <input type="email" class="form-control" id="email" th:field="*{user.email}" required/>
+        </div>
+
+        <!-- Ukryte pola dla domyślnych wartości -->
+        <input type="hidden" th:field="*{user.role}" th:value="'ROLE_USER'"/>
+        <input type="hidden" th:field="*{user.enabled}" th:value="true"/>
+
+        <button type="submit" class="btn btn-primary">Zarejestruj</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

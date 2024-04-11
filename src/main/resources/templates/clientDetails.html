@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa; /* Jasnoszary tło dla kontrastu */
+        }
+        .container {
+            max-width: 600px; /* Ograniczenie szerokości kontenera */
+        }
+        .card {
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Lekkie cieniowanie dla karty */
+        }
+        .card-header {
+            background-color: #007bff; /* Niebieski kolor nagłówka */
+            color: #ffffff; /* Biały tekst */
+            font-weight: bold;
+        }
+        .card-title {
+            color: #007bff; /* Niebieski kolor dla tytułów sekcji */
+        }
+        .card-text > span {
+            color: #555; /* Ciemniejszy szary dla tekstu */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header text-center">
+            User Profile Details
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Personal Information</h5>
+            <p class="card-text">Username: <span th:text="${user.username}">Username</span></p>
+            <p class="card-text">Email: <span th:text="${user.email}">Email</span></p>
+
+            <h5 class="card-title mt-4">Client Information</h5>
+            <p class="card-text">Full Name: <span th:text="${client.fullName}">Full Name</span></p>
+            <p class="card-text">Phone Number: <span th:text="${client.phoneNumber}">Phone Number</span></p>
+
+            <!-- Przycisk "Powrót do strony głównej" -->
+            <div class="text-center mt-4">
+                <a th:href="@{/clientLoggedInView}" class="btn btn-primary">Powrót do strony głównej</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -10,6 +10,7 @@ import pl.dlusk.infrastructure.database.entity.*;
 import pl.dlusk.infrastructure.database.repository.jpa.*;
 import pl.dlusk.infrastructure.database.repository.mapper.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,10 +24,11 @@ public class RestaurantRepository implements RestaurantDAO {
     private final RestaurantJpaRepository restaurantJpaRepository;
     private final RestaurantEntityMapper restaurantEntityMapper;
 
-    private final OwnerJpaRepository ownerJpaRepository;
-
     private final RestaurantAddressJpaRepository restaurantAddressJpaRepository;
     private final RestaurantAddressEntityMapper restaurantAddressEntityMapper;
+
+    private final OwnerJpaRepository ownerJpaRepository;
+    private final OwnerEntityMapper ownerEntityMapper;
 
     private final MenuJpaRepository menuJpaRepository;
     private final MenuEntityMapper menuEntityMapper;
@@ -35,16 +37,21 @@ public class RestaurantRepository implements RestaurantDAO {
     private final MenuItemEntityMapper menuItemEntityMapper;
 
     private final RestaurantDeliveryAreaJpaRepository restaurantDeliveryAreaJpaRepository;
+    private final RestaurantDeliveryAreaEntityMapper restaurantDeliveryAreaEntityMapper;
 
     private final ReviewJpaRepository reviewJpaRepository;
     private final ReviewEntityMapper reviewEntityMapper;
 
+    private final FoodOrderJpaRepository foodOrderJpaRepository;
+    private final FoodOrderEntityMapper foodOrderEntityMapper;
+
+    private final RestaurantDeliveryStreetEntityMapper restaurantDeliveryStreetEntityMapper;
+    private final RestaurantDeliveryStreetJpaRepository restaurantDeliveryStreetJpaRepository;
+
     @Override
-    public List<Restaurant> getRestaurantsByOwnerId(Long ownerId) {
-        List<RestaurantEntity> restaurantEntities = restaurantJpaRepository.findByOwnerEntityId(ownerId);
-        return restaurantEntities.stream()
-                .map(restaurantEntityMapper::mapFromEntity)
-                .collect(Collectors.toList());
+    public Restaurant getRestaurantByOwnerId(Long ownerId) {
+        RestaurantEntity byOwnerEntityId = restaurantJpaRepository.findByOwnerEntityId(ownerId);
+        return restaurantEntityMapper.mapFromEntity(byOwnerEntityId);
     }
 
     @Override
@@ -57,7 +64,7 @@ public class RestaurantRepository implements RestaurantDAO {
     }
 
     @Override
-    public List<Restaurant> getAllRestaurants() {
+    public List<Restaurant> findAllRestaurants() {
         List<RestaurantEntity> allRestaurantsEntities = restaurantJpaRepository.findAll();
         List<Restaurant> allRestaurantEntities = allRestaurantsEntities.stream()
                 .map(restaurantEntityMapper::mapFromEntity)
@@ -68,23 +75,32 @@ public class RestaurantRepository implements RestaurantDAO {
 
     @Override
     public Restaurant addRestaurant(Restaurant restaurant, RestaurantAddress address, Owner owner) {
-        Optional<OwnerEntity> ownerByIdOpt = ownerJpaRepository.findById(owner.getOwnerId());
-        if (ownerByIdOpt.isEmpty()) {
-            throw new RuntimeException("No such owner found with id: " + owner.getOwnerId());
+        log.info("########## RestaurantRepository ##### addRestaurant # START");
+
+        var restaurantAddressOpt = restaurantAddressJpaRepository
+                .findByCityPostalCodeAndAddress(address.getCity(), address.getPostalCode(), address.getAddress());
+        log.info("########## RestaurantRepository ##### addRestaurant #### restaurantAddressOpt: " + restaurantAddressOpt);
+
+        if (restaurantAddressOpt.isPresent()) {
+            throw new RuntimeException("The address with id {} is already being used " + address.getRestaurantAddressId());
         }
 
-        var restaurantAddressOpt = restaurantAddressJpaRepository.findById(address.getRestaurantAddressId());
-        if (restaurantAddressOpt.isEmpty()) {
-            throw new RuntimeException("No such address found with id: " + address.getRestaurantAddressId());
-        }
-        Restaurant restaurantWithOwner = restaurant.withOwner(owner);
-        Restaurant restaurantWithOwnerAndAddress = restaurantWithOwner.withAddress(address);
+        // Najpierw zapisz restaurantAddressEntity
+        RestaurantAddressEntity restaurantAddressEntity = restaurantAddressEntityMapper.mapToEntity(address);
+        restaurantAddressEntity = restaurantAddressJpaRepository.save(restaurantAddressEntity);
 
-        RestaurantEntity restaurantEntityToSave = restaurantEntityMapper.mapToEntity(restaurantWithOwnerAndAddress);
-        RestaurantEntity savedEntity = restaurantJpaRepository.save(restaurantEntityToSave);
+        OwnerEntity ownerEntity = ownerEntityMapper.mapToEntity(owner);
 
-        return restaurantEntityMapper.mapFromEntity(savedEntity);
+        RestaurantEntity restaurantEntity = restaurantEntityMapper.mapToEntity(restaurant);
+        restaurantEntity.setOwnerEntity(ownerEntity);
+        restaurantEntity.setAddress(restaurantAddressEntity);
+
+        RestaurantEntity savedEntity = restaurantJpaRepository.save(restaurantEntity);
+        Restaurant restaurantToReturn = restaurantEntityMapper.mapFromEntity(savedEntity);
+        log.info("########## RestaurantRepository ##### addRestaurant #### restaurantToReturn: " + restaurantToReturn);
+        return restaurantToReturn;
     }
+
 
     @Override
     public Restaurant updateRestaurant(Long restaurantId, Restaurant restaurantDetails) {
@@ -124,16 +140,16 @@ public class RestaurantRepository implements RestaurantDAO {
     }
 
     @Override
-    public Menu getMenuRestaurantById(Long restaurantId) {
+    public Menu findMenuRestaurantById(Long restaurantId) {
         log.info("########## RestaurantRepository ##### getMenuRestaurantById #### restaurantId: " + restaurantId);
         MenuEntity menuEntityByRestaurantId = menuJpaRepository.findByRestaurantId(restaurantId);
-        log.info("########## menuEntityByRestaurantId : " + menuEntityByRestaurantId.toString());
+        log.info("########## RestaurantRepository ##### menuEntityByRestaurantId : " + menuEntityByRestaurantId);
 
         return menuEntityMapper.mapFromEntity(menuEntityByRestaurantId);
     }
 
     @Override
-    public List<Restaurant> getRestaurantsDeliveringToArea(String streetName) {
+    public List<Restaurant> findRestaurantsDeliveringToArea(String streetName) {
         log.info("########## RestaurantRepository ##### getRestaurantsDeliveringToArea #### WEJŚCIE: " + streetName);
 
         // Pobierz listę obszarów dostawy (RestaurantDeliveryAreaEntities) dla danej nazwy ulicy
@@ -157,7 +173,7 @@ public class RestaurantRepository implements RestaurantDAO {
     }
 
     @Override
-    public List<Review> getReviewsByRestaurantId(Long restaurantId) {
+    public List<Review> findReviewsByRestaurantId(Long restaurantId) {
         // Pobierz listę recenzji dla restauracji o podanym ID
         List<ReviewEntity> reviewEntities = reviewJpaRepository.findByRestaurantId(restaurantId);
 
@@ -173,5 +189,116 @@ public class RestaurantRepository implements RestaurantDAO {
                 .map(menuItemEntityMapper::mapFromEntity)
                 .collect(Collectors.toSet());
     }
+
+    @Override
+    public MenuItem findMenuItemById(Long menuItemId) {
+        Optional<MenuItemEntity> byId = menuItemJpaRepository.findById(menuItemId);
+        MenuItemEntity menuItemEntity = byId.orElseThrow();
+        return menuItemEntityMapper.mapFromEntity(menuItemEntity);
+    }
+
+    @Override
+    public Restaurant findRestaurantByUsername(String username) {
+        RestaurantEntity restaurantsByOwnerUsername = restaurantJpaRepository.findRestaurantsByOwnerUsername(username);
+        return restaurantEntityMapper.mapFromEntity(restaurantsByOwnerUsername);
+    }
+
+    @Override
+    public Restaurant findRestaurantByFoodOrderId(Long foodOrderId) {
+        RestaurantEntity restaurantByFoodOrderId = foodOrderJpaRepository.findRestaurantByFoodOrderId(foodOrderId);
+        return restaurantEntityMapper.mapFromEntity(restaurantByFoodOrderId);
+    }
+
+    @Override
+    public Menu save(Menu menu) {
+        log.info("########## RestaurantRepository ##### save # menu: {}", menu);
+
+        MenuEntity menuEntity = menuEntityMapper.mapToEntity(menu);
+
+        // Pobierz istniejącą RestaurantEntity z bazy danych
+        RestaurantEntity restaurantEntity = restaurantJpaRepository.findById(menu.getRestaurant().getRestaurantId())
+                .orElseThrow(() -> new EntityNotFoundException("Restaurant not found with id: " + menu.getRestaurant().getRestaurantId()));
+
+        menuEntity.setRestaurantEntity(restaurantEntity);
+        menuJpaRepository.save(menuEntity);
+
+        log.info("########## RestaurantRepository ##### save # savedMenu: {}", menuEntity);
+        return menuEntityMapper.mapFromEntity(menuEntity);
+    }
+
+
+    @Override
+    public void saveMenuItem(MenuItem menuItem, Menu menu) {
+        log.info("########## RestaurantRepository ##### saveMenuItem # START");
+        log.info("########## RestaurantRepository ##### saveMenuItem # menuItem: {}", menuItem);
+        log.info("########## RestaurantRepository ##### saveMenuItem # menu: {}", menu);
+        // Najpierw znajdź istniejące MenuEntity lub zapisz nowe
+        MenuEntity menuEntity = menuJpaRepository
+                .findById(menu.getMenuId())
+                .orElseGet(() -> menuJpaRepository.save(menuEntityMapper.mapToEntity(menu)));
+
+        // Następnie ustaw MenuEntity dla MenuItemEntity i zapisz
+        MenuItemEntity menuItemEntity = menuItemEntityMapper.mapToEntity(menuItem);
+        menuItemEntity.setMenuEntity(menuEntity);
+
+        menuItemJpaRepository.save(menuItemEntity);
+        log.info("########## RestaurantRepository ##### saveMenuItem # savedMenuItemEntity: {}", menuItemEntity);
+    }
+
+
+    @Override
+    public void deleteMenu(Menu menu) {
+        log.info("########## RestaurantRepository ##### deleteMenu # menu: {}",menu);
+        Set<MenuItem> menuItems = menu.getMenuItems();
+        for (MenuItem menuItem : menuItems) {
+            MenuItemEntity menuItemEntity = menuItemEntityMapper.mapToEntity(menuItem);
+            menuItemJpaRepository.delete(menuItemEntity);
+
+        }
+        MenuEntity menuEntity = menuEntityMapper.mapToEntity(menu);
+        menuJpaRepository.delete(menuEntity);
+        log.info("########## RestaurantRepository ##### deleteMenu # menuEntity: {}",menuEntity);
+
+    }
+
+    @Override
+    public List<RestaurantDeliveryArea> findDeliveryAreasByRestaurantId(Long restaurantId) {
+        List<RestaurantDeliveryAreaEntity> deliveryAreaEntities = restaurantDeliveryAreaJpaRepository.findByRestaurantEntityId(restaurantId);
+
+        if (deliveryAreaEntities.isEmpty()) {
+            log.info("No delivery areas found for restaurant with ID: {}", restaurantId);
+            return Collections.emptyList();
+        }
+
+        return deliveryAreaEntities.stream()
+                .map(restaurantDeliveryAreaEntityMapper::mapFromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void addDeliveryAreaForRestaurant(Long restaurantId, RestaurantDeliveryStreet newDeliveryStreet) {
+        log.info("########## RestaurantRepository ##### addDeliveryAreaForRestaurant # START: {}");
+
+        // 1. Znajdź encję restauracji na podstawie restaurantId
+        RestaurantEntity restaurantEntity = restaurantJpaRepository.findById(restaurantId)
+                .orElseThrow(() -> new EntityNotFoundException("Restaurant not found with ID: " + restaurantId));
+
+        // 2. Mapuj newDeliveryStreet do RestaurantDeliveryStreetEntity i zapisz w bazie
+        RestaurantDeliveryStreetEntity deliveryStreetEntity = restaurantDeliveryStreetEntityMapper.mapToEntity(newDeliveryStreet);
+        RestaurantDeliveryStreetEntity savedDeliveryStreetEntity = restaurantDeliveryStreetJpaRepository.save(deliveryStreetEntity);
+
+        // 3. Stwórz nową encję RestaurantDeliveryAreaEntity łączącą restaurację i ulicę dostaw
+        RestaurantDeliveryAreaEntity newDeliveryArea = new RestaurantDeliveryAreaEntity();
+        newDeliveryArea.setRestaurantEntity(restaurantEntity);
+        newDeliveryArea.setDeliveryStreet(savedDeliveryStreetEntity);
+
+        // 4. Zapisz nowy obszar dostaw w bazie danych
+        restaurantDeliveryAreaJpaRepository.save(newDeliveryArea);
+
+        log.info("########## RestaurantRepository ##### addDeliveryAreaForRestaurant # FINISHED: Area added for restaurantId: {}, street: {}", restaurantId, newDeliveryStreet.getStreetName());
+    }
+
+
+
 }
 

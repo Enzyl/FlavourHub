@@ -5,8 +5,8 @@ import lombok.*;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = "restaurantDeliveryAreaId")
-@ToString(of = {"restaurantDeliveryAreaId"})
+@EqualsAndHashCode(of = {"restaurantDeliveryAreaId","restaurant","deliveryStreet"})
+@ToString(of = {"restaurantDeliveryAreaId","restaurant","deliveryStreet"})
 public class RestaurantDeliveryArea {
     Long restaurantDeliveryAreaId;
 

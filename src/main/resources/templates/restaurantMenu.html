@@ -4,39 +4,99 @@
     <meta charset="UTF-8">
     <title>Menu Restauracji</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        .cart-panel {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
 
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Restauracja</a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/shoppingCart}">
+                        <i class="fas fa-shopping-cart"></i> Koszyk
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
 <div class="container mt-5">
-    <h1 th:text="${menu.name}">Nazwa Menu</h1>
-    <p th:text="${menu.description}">Opis Menu</p>
+    <div class="row">
+        <div class="col-md-8">
+            <h1 th:text="${menu.name}">Nazwa Menu</h1>
+            <p th:text="${menu.description}">Opis Menu</p>
+            <h2>Pozycje w Menu</h2>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Nazwa</th>
+                        <th>Opis</th>
+                        <th>Kategoria</th>
+                        <th>Cena</th>
+                        <th></th> <!-- Usunięto kolumnę Ilość -->
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="menuItem : ${menu.menuItems}">
+                        <td th:text="${menuItem.name}"></td>
+                        <td th:text="${menuItem.description}"></td>
+                        <td th:text="${menuItem.category}"></td>
+                        <td th:text="${menuItem.price}"></td>
+                        <td>
+                            <form th:action="@{/addToCart}" method="post">
+                                <input type="hidden" name="menuItemId" th:value="${menuItem.menuItemId}">
+                                <button type="submit" class="btn btn-success btn-sm">Dodaj do koszyka</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <a th:href="@{/}" class="btn btn-primary">Powrót do listy restauracji</a>
+            <a th:href="@{/deliveryAddress}" class="btn btn-success">Przejdź do adresu dostawy</a>
+        </div>
 
-    <h2>Pozycje w Menu</h2>
-    <div th:if="${#lists.size(menu.menuItems) == 0}">
-        <p>Brak pozycji w menu.</p>
-    </div>
-    <div th:unless="${#lists.size(menu.menuItems) == 0}">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Nazwa</th>
-                <th>Opis</th>
-                <th>Kategoria</th>
-                <th>Cena</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="menuItem : ${menu.menuItems}">
-                <td th:text="${menuItem.name}">Nazwa Pozycji</td>
-                <td th:text="${menuItem.description}">Opis Pozycji</td>
-                <td th:text="${menuItem.category}">Kategoria</td>
-                <td th:text="${menuItem.price}">Cena</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
 
-    <a th:href="@{/}" class="btn btn-primary">Powrót do listy restauracji</a>
+
+        <div class="col-md-4 cart-panel">
+            <h2>Koszyk</h2>
+            <div th:if="${not #maps.isEmpty(shoppingCart.items)}">
+                <ul>
+                    <li th:each="itemEntry : ${shoppingCart.items.entrySet()}">
+                        <span th:text="${itemEntry.key.name}">Nazwa przedmiotu</span>
+                        <span th:text="${itemEntry.value}">Ilość</span>
+                        <!-- Guziki do modyfikacji ilości -->
+                        <form th:action="@{/updateCartItem}" method="post" style="display:inline;">
+                            <input type="hidden" name="menuItemId" th:value="${itemEntry.key.menuItemId}">
+                            <input type="hidden" name="quantity" th:value="${itemEntry.value + 1}">
+                            <button type="submit" class="btn btn-success btn-sm">+</button>
+                        </form>
+                        <form th:action="@{/updateCartItem}" method="post" style="display:inline;">
+                            <input type="hidden" name="menuItemId" th:value="${itemEntry.key.menuItemId}">
+                            <input type="hidden" name="quantity" th:value="${itemEntry.value > 1 ? itemEntry.value - 1 : 1}">
+                            <button type="submit" class="btn btn-danger btn-sm" th:disabled="${itemEntry.value == 1}">-</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            <p th:if="${#maps.isEmpty(shoppingCart.items)}">Twój koszyk jest pusty.</p>
+            <h3>Całkowita wartość: <span th:text="${totalValue}">0</span> PLN</h3>
+        </div>
+
+
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>

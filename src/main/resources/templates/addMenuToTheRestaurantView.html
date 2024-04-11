@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dodaj Menu do Restauracji</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Dodaj Menu do Restauracji</h2>
+    <form th:action="@{/addMenuToTheRestaurant}" method="post">
+        <div class="form-group">
+            <label for="name">Nazwa Menu</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Wprowadź nazwę menu" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Opis Menu</label>
+            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Wprowadź opis menu" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Dodaj Menu</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

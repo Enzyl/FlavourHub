@@ -1,35 +1,61 @@
 package pl.dlusk.infrastructure.security;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
+@Slf4j
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
 public class SecurityConfiguration {
 
+    private UserDetailsService userDetailsService;
+    private CustomLoginSuccessHandler customLoginSuccessHandler;
+
+    @SuppressWarnings("deprecation")
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Uwaga: używanie NoOpPasswordEncoder jest niezalecane i powinno być stosowane tylko w celach testowych
+        return NoOpPasswordEncoder.getInstance();
     }
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable() // Wyłączenie CSRF
-                .authorizeRequests(authorize -> authorize
-                        .anyRequest().permitAll() // Zezwolenie na wszystkie żądania
+                .csrf().disable()
+                .authorizeRequests(authz -> authz
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/login",
+                                "/forgotPassword",
+                                "/registration",
+                                "/registerClient",
+                                "/registerOwner")
+                        .permitAll()
+                        .anyRequest().authenticated()
                 )
-                .formLogin().disable() // Wyłączenie formularza logowania
-                .httpBasic().disable(); // Wyłączenie podstawowego uwierzytelniania HTTP
-
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
+                        .successHandler(customLoginSuccessHandler)
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                );
         return http.build();
     }
 
@@ -39,9 +65,22 @@ public class SecurityConfiguration {
         http.csrf()
                 .disable()
                 .authorizeHttpRequests()
-                .anyRequest()
+                . anyRequest()
                 .permitAll();
 
         return http.build();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 }

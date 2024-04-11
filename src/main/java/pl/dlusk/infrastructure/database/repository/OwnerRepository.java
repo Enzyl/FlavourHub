@@ -1,6 +1,7 @@
 package pl.dlusk.infrastructure.database.repository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import pl.dlusk.business.dao.OwnerDAO;
 import pl.dlusk.domain.Owner;
@@ -19,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Repository
 @AllArgsConstructor
 public class OwnerRepository implements OwnerDAO {
@@ -30,8 +31,6 @@ public class OwnerRepository implements OwnerDAO {
     private final FoodOrderingAppUserJpaRepository foodOrderingAppUserJpaRepository;
     private final FoodOrderingAppUserEntityMapper foodOrderingAppUserEntityMapper;
 
-    private final RestaurantJpaRepository restaurantJpaRepository;
-    private final RestaurantEntityMapper restaurantEntityMapper;
 
     @Override
     public Optional<Owner> findById(Long id) {
@@ -47,25 +46,33 @@ public class OwnerRepository implements OwnerDAO {
 
     @Override
     public Owner saveOwnerWithUserBefore(Owner owner, FoodOrderingAppUser user) {
-        Optional<OwnerEntity> existingOwnerById = ownerJpaRepository.findById(owner.getOwnerId());
-        Optional<FoodOrderingAppUserEntity> existingUserByUsername = foodOrderingAppUserJpaRepository.
-                findByUsername(user.getUsername());
-        if (existingOwnerById.isPresent()) {
+        log.info("########## OwnerRepository #### saveOwnerWithUserBefore START");
+        log.info("########## OwnerRepository #### saveOwnerWithUserBefore owner {}",owner);
+        log.info("########## OwnerRepository #### saveOwnerWithUserBefore user {}",user);
+        Optional<OwnerEntity> existingOwnerByNIP = ownerJpaRepository.findByNip(owner.getNip());
+        log.info("########## OwnerRepository #### existingOwnerByNIP {}",existingOwnerByNIP);
+        Optional<FoodOrderingAppUserEntity> existingUserByEmail = foodOrderingAppUserJpaRepository.findByEmail(user.getEmail());
+        log.info("########## OwnerRepository #### existingUserByEmail {}",existingUserByEmail);
+        if (existingOwnerByNIP.isPresent()) {
+            log.info("########## OwnerRepository #### existingOwnerByNIP.isPresent() {}",existingOwnerByNIP.isPresent());
             // Rzuć wyjątek, jeśli owner już istnieje
             throw new UsernameAlreadyExistsException(owner.getName());
         }
 
-        if (existingUserByUsername.isPresent()) {
+        if (existingUserByEmail.isPresent()) {
+            log.info("########## OwnerRepository #### existingUserByEmail.isPresent() {}",existingUserByEmail.isPresent());
             // Rzuć wyjątek, jeśli użytkownik już istnieje
             throw new UsernameAlreadyExistsException(user.getUsername());
         }
         FoodOrderingAppUserEntity userEntity = foodOrderingAppUserEntityMapper.mapToEntity(user);
         FoodOrderingAppUserEntity savedUserEntity = foodOrderingAppUserJpaRepository.save(userEntity);
+        log.info("########## OwnerRepository #### savedUserEntity {}",savedUserEntity);
 
         OwnerEntity ownerEntity = ownerEntityMapper.mapToEntity(owner);
 
         ownerEntity.setUser(userEntity);
         OwnerEntity savedOwnerWithUser = ownerJpaRepository.save(ownerEntity);
+        log.info("########## OwnerService #### registerOwner FINISH with savedOwnerWithUser: {}",savedOwnerWithUser);
         return ownerEntityMapper.mapFromEntity(savedOwnerWithUser).withUser(user);
     }
     @Override
@@ -73,6 +80,12 @@ public class OwnerRepository implements OwnerDAO {
         OwnerEntity ownerEntity = ownerEntityMapper.mapToEntity(owner);
         ownerJpaRepository.save(ownerEntity);
         return ownerEntityMapper.mapFromEntity(ownerEntity);
+    }
+
+    @Override
+    public Owner findByUserId(Long id) {
+        OwnerEntity byUserId = ownerJpaRepository.findByUserId(id);
+        return ownerEntityMapper.mapFromEntity(byUserId);
     }
 
     @Override
@@ -89,6 +102,15 @@ public class OwnerRepository implements OwnerDAO {
         List<OwnerEntity> findOwnersEntityBySurname = ownerJpaRepository.findBySurname(surname);
         List<Owner> findOwnersBySurname = findOwnersEntityBySurname.stream().map(ownerEntityMapper::mapFromEntity).toList();
         return new ArrayList<>(findOwnersBySurname);
+    }
+
+    @Override
+    public Owner findByUsername(String username) {
+        log.info("########## OwnerRepository #### findByUsername #  username   " + username);
+        OwnerEntity ownerEntity = ownerJpaRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Owner not found for the username: " + username));
+
+        return ownerEntityMapper.mapFromEntity(ownerEntity);
     }
 
     @Override

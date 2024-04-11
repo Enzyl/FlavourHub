@@ -82,7 +82,7 @@ class ClientRepositoryTest {
         when(clientJpaRepository.findById(1L)).thenReturn(Optional.of(clientEntity));
         when(clientEntityMapper.mapFromEntity(clientEntity)).thenReturn(client);
 
-        Client foundClient = clientRepository.findById(1L);
+        Client foundClient = clientRepository.findByUserId(1L);
 
         assertThat(foundClient).isNotNull();
         assertThat(foundClient.getClientId()).isEqualTo(client.getClientId());

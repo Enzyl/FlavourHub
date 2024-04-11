@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Aktualna zawartość menu</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .hidden-form {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Aktualna zawartość menu</h2>
+    <h3 th:text="${menu.name} + ' - ' + ${menu.description}"></h3>
+    <!-- Lista dań zgrupowanych po kategoriach -->
+    <div th:if="${groupedMenuItems != null}">
+        <h4>Dania w menu:</h4>
+        <div th:each="itemsEntry : ${groupedMenuItems.entrySet()}">
+            <h5 th:text="${itemsEntry.key}"></h5>
+            <ul>
+                <li th:each="item : ${itemsEntry.value}" th:text="${item.name} + ' - ' + ${(item.description != null ? item.description : '')} + ' - ' + ${item.price} + ' zł'"></li>
+            </ul>
+        </div>
+    </div>
+
+    <div th:if="${groupedMenuItems == null or groupedMenuItems.empty}">
+        <p>Menu jest obecnie puste. Dodaj dania, aby je uzupełnić.</p>
+    </div>
+    <!-- Przycisk wywołujący formularz -->
+    <button class="btn btn-primary" onclick="showForm()">Dodaj kolejne danie</button>
+    <a th:href="@{/addAllMenuItemsToMenu}" class="btn btn-secondary">Zakończ dodawanie dań do menu</a>
+
+    <!-- Ukryty formularz -->
+    <div class="hidden-form" id="addMenuItemForm">
+        <h4>Dodaj nowe danie do menu</h4>
+        <form th:action="@{/addMenuItemToMenu}" method="post">
+            <div class="form-group">
+                <label for="itemName">Nazwa dania:</label>
+                <input type="text" id="itemName" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="itemDescription">Opis dania:</label>
+                <input type="text" id="itemDescription" name="description" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="itemCategory">Kategoria dania:</label>
+                <input type="text" id="itemCategory" name="category" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="itemPrice">Cena dania:</label>
+                <input type="number" step="0.01" id="itemPrice" name="price" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">Dodaj</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showForm() {
+        document.getElementById("addMenuItemForm").style.display = "block";
+    }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.6/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

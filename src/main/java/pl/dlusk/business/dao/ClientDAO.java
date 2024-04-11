@@ -11,12 +11,14 @@ public interface ClientDAO {
 
     Client save(Client client, FoodOrderingAppUser user); // Zapisuje lub aktualizuje klienta.
 
-    Client findById(Long id); // Znajduje klienta po ID.
+    Client findByUserId(Long id); // Znajduje klienta po ID usera.
 
     List<Client> findAll(); // Zwraca listę wszystkich klientów.
 
     void deleteById(Long id); // Usuwa klienta po ID.
 
     void deactivateAccount(Long userId);
+    Client findClientByOrderId(Long orderId);
+    Client findClientByUsername(String username);
 
 }

@@ -1,10 +1,10 @@
 INSERT INTO food_ordering_app_user (username, password, email, role, enabled)
-VALUES ('user1', 'password1', 'user1@example.com', 'ROLE_USER', true),
-       ('user2', 'password2', 'user2@example.com', 'ROLE_OWNER', true),
-       ('admin', 'password3', 'admin@example.com', 'ROLE_ADMIN', true),
-       ('owner4', 'pass4', 'owner4@example.com', 'ROLE_OWNER', true),
-       ('owner5', 'pass5', 'owner5@example.com', 'ROLE_OWNER', true),
-       ('owner6', 'pass6', 'owner6@example.com', 'ROLE_OWNER', true);
+VALUES ('user1', 'password1', 'user1@example.com', 'USER', true),
+       ('user2', 'password2', 'user2@example.com', 'OWNER', true),
+       ('admin', 'password3', 'admin@example.com', 'ADMIN', true),
+       ('owner4', 'pass4', 'owner4@example.com', 'OWNER', true),
+       ('owner5', 'pass5', 'owner5@example.com', 'OWNER', true),
+       ('owner6', 'pass6', 'owner6@example.com', 'OWNER', true);
 INSERT INTO restaurant_address (city, postal_code, address)
 VALUES ('City1', '00001', 'Address 1'),
        ('City2', '00002', 'Address 2'),
@@ -37,7 +37,6 @@ VALUES ('MenuItem 1', 'Description 1', 'Category 1', 10.00, '/path/to/menuitem1.
        ('MenuItem 3', 'Description 3', 'Category 3', 13.00, '/path/to/menuitem3.jpg', 3),
        ('MenuItem 4', 'Description 4', 'Category 4', 14.00, '/path/to/menuitem4.jpg', 4),
        ('MenuItem 5', 'Description 5', 'Category 5', 11.00, '/path/to/menuitem5.jpg', 5),
-       ('MenuItem 5', 'Description 5', 'Category 5', 171.00, '/path/to/menuitem5.jpg', 1),
        ('MenuItem 6', 'Description 6', 'Category 5', 111.00, '/path/to/menuitem5.jpg', 1),
        ('MenuItem 7', 'Description 7', 'Category 5', 123.00, '/path/to/menuitem5.jpg', 2),
        ('MenuItem 8', 'Description 8', 'Category 5', 18.00, '/path/to/menuitem5.jpg', 2),
@@ -47,13 +46,17 @@ VALUES ('MenuItem 1', 'Description 1', 'Category 1', 10.00, '/path/to/menuitem1.
        ('MenuItem 12', 'Description 12', 'Category 5', 21.00, '/path/to/menuitem5.jpg', 3),
        ('MenuItem 13', 'Description 13', 'Category 5', 31.00, '/path/to/menuitem5.jpg', 4),
        ('MenuItem 14', 'Description 14', 'Category 5', 13.00, '/path/to/menuitem5.jpg', 1),
-       ('MenuItem 15', 'Description 15', 'Category 6', 22.00, '/path/to/menuitem6.jpg', 5);
+       ('MenuItem 15', 'Description 15', 'Category 6', 22.00, '/path/to/menuitem6.jpg', 5),
+       ('MenuItem 16', 'Description 16', 'Category 5', 171.00, '/path/to/menuitem5.jpg', 1);
+
 INSERT INTO client (full_name, phone_number, user_id)
 VALUES ('Client 1', '111222333', 1),
        ('Client 2', '444555666', 2);
-INSERT INTO food_order (client_id, restaurant_id, order_time, status, total_price)
-VALUES (1, 1, '2023-01-01 12:00:00', 'NEW', 25.00),
-       (2, 2, '2023-01-02 18:00:00', 'DELIVERED', 30.00);
+INSERT INTO food_order (client_id, restaurant_id, order_time, status, total_price, order_number)
+VALUES
+    (1, 1, '2023-01-01 12:00:00', 'NEW', 25.00, 1001),
+    (2, 2, '2023-01-02 18:00:00', 'DELIVERED', 30.00, 1002);
+
 INSERT INTO order_item (order_id, menu_item_id, quantity)
 VALUES (1, 1, 2),
        (2, 2, 1);

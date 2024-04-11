@@ -4,8 +4,8 @@ import lombok.*;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = "orderItemId")
-@ToString(of = {"orderItemId", "quantity"})
+@EqualsAndHashCode(of = {"orderItemId", "menuItem"})
+@ToString(of = {"orderItemId", "quantity","foodOrder","menuItem"})
 public class OrderItem {
     Long orderItemId;
     FoodOrder foodOrder;

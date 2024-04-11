@@ -41,6 +41,6 @@ public interface RestaurantDeliveryAreaEntityMapper {
                                 .build();
     }
 
-
+    RestaurantDeliveryAreaEntity mapToEntity(RestaurantDeliveryArea rda);
 
 }
