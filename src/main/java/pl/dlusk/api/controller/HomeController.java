@@ -3,6 +3,9 @@ package pl.dlusk.api.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,33 +18,44 @@ import pl.dlusk.domain.Client;
 import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
 import java.util.Enumeration;
-import java.util.List;
 @Slf4j
 @Controller
 @AllArgsConstructor
 public class HomeController {
     private final RestaurantService restaurantService;
-    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
     @GetMapping("/")
     public String home(Model model, HttpSession session) {
         log.info("########## HomeController #### home #  START");
+
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            Object attributeValue = session.getAttribute(attributeName);
+            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
+        }
         return "homeView";
     }
 
     @GetMapping("/searchRestaurants")
-    public String showRestaurantsDeliveringOnTheStreet(@RequestParam("location") String location, Model model) {
-        // Wywołanie metody serwisu, aby znaleźć restauracje dostarczające do podanej lokalizacji
-        List<Restaurant> restaurants = restaurantService.getRestaurantsDeliveringToArea(location);
-
-        // Dodanie listy restauracji do modelu, aby była dostępna w widoku
+    public String showRestaurantsDeliveringOnTheStreet(@RequestParam("location") String location,
+                                                       @RequestParam(defaultValue = "0") int currentPage,
+                                                       Model model, HttpSession session) {
+        Pageable pageable = PageRequest.of(currentPage, 2);
+        Page<Restaurant> restaurants = restaurantService.getRestaurantsDeliveringToArea(location, pageable);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", restaurants.getTotalPages());
         model.addAttribute("restaurants", restaurants);
-
-        // Zwrócenie nazwy widoku (np. "restaurants.html"), który będzie wyświetlał listę restauracji
-        return "restaurantsDeliveringToGivenArea"; // Załóżmy, że masz plik restaurants.html w katalogu resources/templates
+        model.addAttribute("location", location);
+        log.info("########## HomeController #### showRestaurantsDeliveringOnTheStreet #  location: {}",location);
+        String location1 = (String) session.getAttribute("location");
+        if (location1 == null){
+            session.setAttribute("location", location);
+        }
+        return "restaurantsDeliveringToGivenArea";
     }
+
 
     @GetMapping("/registration")
     public String showRegisterForms(HttpSession session, Model model) {
@@ -70,7 +84,7 @@ public class HomeController {
                 .user(defaultUser)
                 .build();
 
-        // Dodaj obiekty do modelu
+
         model.addAttribute("client", client);
         model.addAttribute("owner", owner);
 
@@ -78,9 +92,9 @@ public class HomeController {
         session.setAttribute("owner", owner);
         session.setAttribute("client", client);
 
-        // Zwróć nazwę widoku, który zawiera formularze rejestracji
+
         log.info("########## HomeController #### showRegisterForms #  FINISH");
-        return "clientOwnerRegistration"; // Nazwa pliku widoku z formularzami rejestracji
+        return "clientOwnerRegistration";
     }
 
     @GetMapping("/login")

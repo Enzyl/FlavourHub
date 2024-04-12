@@ -63,7 +63,7 @@
                     </tbody>
                 </table>
             </div>
-            <a th:href="@{/}" class="btn btn-primary">Powrót do listy restauracji</a>
+            <a th:href="@{/searchRestaurants(location=${session.location})}" class="btn btn-primary">Powrót do listy restauracji</a>
             <a th:href="@{/deliveryAddress}" class="btn btn-success">Przejdź do adresu dostawy</a>
         </div>
 

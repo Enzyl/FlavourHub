@@ -1,12 +1,14 @@
 package pl.dlusk.api.controller;
+
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.OwnerService;
 import pl.dlusk.business.RestaurantService;
@@ -14,7 +16,6 @@ import pl.dlusk.business.dao.FoodOrderDAO;
 import pl.dlusk.business.dao.OwnerDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
-import pl.dlusk.infrastructure.database.repository.OwnerRepository;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
@@ -22,8 +23,6 @@ import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Controller
@@ -49,12 +48,12 @@ public class OwnerController {
                         .username("")
                         .password("")
                         .email("")
-                        .role("ROLE_OWNER") // Domyślna rola dla właściciela
-                        .enabled(true) // Domyślnie aktywny
+                        .role("ROLE_OWNER")
+                        .enabled(true)
                         .build())
                 .build();
         model.addAttribute("owner", owner);
-        return "registerOwner"; // nazwa pliku HTML Thymeleaf z formularzem rejestracji właściciela
+        return "registerOwner";
     }
 
     @PostMapping("/registerOwner")
@@ -72,7 +71,7 @@ public class OwnerController {
         log.info("########## ClientController #### registerClient #  START");
         FoodOrderingAppUser user = FoodOrderingAppUser.builder()
                 .username(username)
-                .password(password) // Zakładam, że hasło jest już zakodowane lub zostanie zakodowane później
+                .password(password)
                 .email(email)
                 .role("OWNER")
                 .enabled(enabled)
@@ -95,12 +94,12 @@ public class OwnerController {
             return "registrationSuccessView";
         }
 
-        return "redirect:/showOwnerLoggedInView"; // przekierowanie do pulpitu właściciela po pomyślnej rejestracji
+        return "redirect:/showOwnerLoggedInView";
     }
 
     @GetMapping("/showOwnerLoggedInView")
     public String showOwnerLoggedInView(HttpSession session, Model model) {
-        // Pobierz nazwę użytkownika zalogowanego właściciela
+
         String username = (String) session.getAttribute("username");
         log.info("########## OwnerController #### showOwnerLoggedInView #  username   " + username);
 

@@ -178,12 +178,12 @@ private final RestaurantService restaurantService;
     @GetMapping("/showAddingDeliveryStreetsView")
     public String   showAddingDeliveryStreetsView(HttpSession session, Model model) {
 
-//        Enumeration<String> attributeNames = session.getAttributeNames();
-//        while (attributeNames.hasMoreElements()) {
-//            String attributeName = attributeNames.nextElement();
-//            Object attributeValue = session.getAttribute(attributeName);
-//            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
-//        }
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            Object attributeValue = session.getAttribute(attributeName);
+            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
+        }
 
         Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
         Long restaurantId = restaurant.getRestaurantId();

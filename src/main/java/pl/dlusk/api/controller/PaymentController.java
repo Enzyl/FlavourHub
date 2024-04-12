@@ -28,11 +28,9 @@ public class PaymentController {
         log.info("########## PaymentController #### processBlikCode #  START");
         BigDecimal totalAmount = (BigDecimal) session.getAttribute("totalValue");
 
-        // Formatowanie czasu
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDateTime = LocalDateTime.now().format(formatter);
 
-        // Parsowanie sformatowanego czasu z powrotem na LocalDateTime
         LocalDateTime paymentTime = LocalDateTime.parse(formattedDateTime, formatter);
 
         Payment payment = Payment.builder()

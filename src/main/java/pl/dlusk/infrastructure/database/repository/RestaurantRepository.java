@@ -3,6 +3,9 @@ package pl.dlusk.infrastructure.database.repository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
@@ -85,7 +88,7 @@ public class RestaurantRepository implements RestaurantDAO {
             throw new RuntimeException("The address with id {} is already being used " + address.getRestaurantAddressId());
         }
 
-        // Najpierw zapisz restaurantAddressEntity
+
         RestaurantAddressEntity restaurantAddressEntity = restaurantAddressEntityMapper.mapToEntity(address);
         restaurantAddressEntity = restaurantAddressJpaRepository.save(restaurantAddressEntity);
 
@@ -117,7 +120,7 @@ public class RestaurantRepository implements RestaurantDAO {
                         existingRestaurant.setImagePath(restaurantDetails.getImagePath());
                     }
 
-                    // Przykład aktualizacji adresu, zakładając, że masz metodę do mapowania adresu domenowego na encję
+
                     if (restaurantDetails.getAddress() != null) {
 
                         RestaurantAddress address = restaurantDetails.getAddress();
@@ -125,10 +128,10 @@ public class RestaurantRepository implements RestaurantDAO {
                         existingRestaurant.setAddress(restaurantAddressEntity);
                     }
 
-                    // Zapisz zmiany w bazie danych
+
                     RestaurantEntity updatedRestaurant = restaurantJpaRepository.save(existingRestaurant);
 
-                    // Zamapuj zaktualizowaną encję z powrotem na obiekt domenowy
+
                     return restaurantEntityMapper.mapFromEntity(updatedRestaurant);
                 }
         ).orElseThrow(() -> new EntityNotFoundException("Restaurant not found with id " + restaurantId));
@@ -149,35 +152,35 @@ public class RestaurantRepository implements RestaurantDAO {
     }
 
     @Override
-    public List<Restaurant> findRestaurantsDeliveringToArea(String streetName) {
+    public Page<Restaurant> findRestaurantsDeliveringToArea(String streetName, Pageable pageable) {
         log.info("########## RestaurantRepository ##### getRestaurantsDeliveringToArea #### WEJŚCIE: " + streetName);
 
-        // Pobierz listę obszarów dostawy (RestaurantDeliveryAreaEntities) dla danej nazwy ulicy
-        List<RestaurantDeliveryAreaEntity> deliveryAreas = restaurantDeliveryAreaJpaRepository.findByStreetName(streetName);
+
+        Page<RestaurantDeliveryAreaEntity> deliveryAreas = restaurantDeliveryAreaJpaRepository.findByStreetName(streetName, pageable);
         log.info("########## deliveryAreas : " + deliveryAreas);
 
-        // Pobierz unikalne ID restauracji z tych obszarów dostawy
-        Set<Long> restaurantIds = deliveryAreas.stream()
+
+        Set<Long> restaurantIds = deliveryAreas.getContent().stream()
                 .map(deliveryArea -> deliveryArea.getRestaurantEntity().getId())
                 .collect(Collectors.toSet());
         log.info("########## restaurantIds : " + restaurantIds);
 
-        // Pobierz listę restauracji na podstawie tych ID
+
         List<RestaurantEntity> restaurantEntities = restaurantJpaRepository.findAllById(restaurantIds);
         log.info("########## restaurantEntities : " + restaurantEntities);
 
-        // Zamień encje restauracji na obiekty domenowe
-        return restaurantEntities.stream()
+
+        return new PageImpl<>(restaurantEntities.stream()
                 .map(restaurantEntityMapper::mapFromEntity)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()), pageable, deliveryAreas.getTotalElements());
     }
 
     @Override
     public List<Review> findReviewsByRestaurantId(Long restaurantId) {
-        // Pobierz listę recenzji dla restauracji o podanym ID
+
         List<ReviewEntity> reviewEntities = reviewJpaRepository.findByRestaurantId(restaurantId);
 
-        // Zamień listę encji ReviewEntity na listę obiektów domenowych Review
+
         return reviewEntities.stream()
                 .map(reviewEntityMapper::mapFromEntity)
                 .collect(Collectors.toList());
@@ -215,7 +218,7 @@ public class RestaurantRepository implements RestaurantDAO {
 
         MenuEntity menuEntity = menuEntityMapper.mapToEntity(menu);
 
-        // Pobierz istniejącą RestaurantEntity z bazy danych
+
         RestaurantEntity restaurantEntity = restaurantJpaRepository.findById(menu.getRestaurant().getRestaurantId())
                 .orElseThrow(() -> new EntityNotFoundException("Restaurant not found with id: " + menu.getRestaurant().getRestaurantId()));
 
@@ -232,12 +235,12 @@ public class RestaurantRepository implements RestaurantDAO {
         log.info("########## RestaurantRepository ##### saveMenuItem # START");
         log.info("########## RestaurantRepository ##### saveMenuItem # menuItem: {}", menuItem);
         log.info("########## RestaurantRepository ##### saveMenuItem # menu: {}", menu);
-        // Najpierw znajdź istniejące MenuEntity lub zapisz nowe
+
         MenuEntity menuEntity = menuJpaRepository
                 .findById(menu.getMenuId())
                 .orElseGet(() -> menuJpaRepository.save(menuEntityMapper.mapToEntity(menu)));
 
-        // Następnie ustaw MenuEntity dla MenuItemEntity i zapisz
+
         MenuItemEntity menuItemEntity = menuItemEntityMapper.mapToEntity(menuItem);
         menuItemEntity.setMenuEntity(menuEntity);
 
@@ -279,20 +282,20 @@ public class RestaurantRepository implements RestaurantDAO {
     public void addDeliveryAreaForRestaurant(Long restaurantId, RestaurantDeliveryStreet newDeliveryStreet) {
         log.info("########## RestaurantRepository ##### addDeliveryAreaForRestaurant # START: {}");
 
-        // 1. Znajdź encję restauracji na podstawie restaurantId
+
         RestaurantEntity restaurantEntity = restaurantJpaRepository.findById(restaurantId)
                 .orElseThrow(() -> new EntityNotFoundException("Restaurant not found with ID: " + restaurantId));
 
-        // 2. Mapuj newDeliveryStreet do RestaurantDeliveryStreetEntity i zapisz w bazie
+
         RestaurantDeliveryStreetEntity deliveryStreetEntity = restaurantDeliveryStreetEntityMapper.mapToEntity(newDeliveryStreet);
         RestaurantDeliveryStreetEntity savedDeliveryStreetEntity = restaurantDeliveryStreetJpaRepository.save(deliveryStreetEntity);
 
-        // 3. Stwórz nową encję RestaurantDeliveryAreaEntity łączącą restaurację i ulicę dostaw
+
         RestaurantDeliveryAreaEntity newDeliveryArea = new RestaurantDeliveryAreaEntity();
         newDeliveryArea.setRestaurantEntity(restaurantEntity);
         newDeliveryArea.setDeliveryStreet(savedDeliveryStreetEntity);
 
-        // 4. Zapisz nowy obszar dostaw w bazie danych
+
         restaurantDeliveryAreaJpaRepository.save(newDeliveryArea);
 
         log.info("########## RestaurantRepository ##### addDeliveryAreaForRestaurant # FINISHED: Area added for restaurantId: {}, street: {}", restaurantId, newDeliveryStreet.getStreetName());

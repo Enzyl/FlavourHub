@@ -1,5 +1,7 @@
 package pl.dlusk.business.dao;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import pl.dlusk.domain.*;
 
 import java.util.List;
@@ -26,7 +28,7 @@ public interface RestaurantDAO {
 
     MenuItem findMenuItemById(Long menuItemId);
 
-    List<Restaurant> findRestaurantsDeliveringToArea(String streetName);
+     Page<Restaurant> findRestaurantsDeliveringToArea(String streetName, Pageable pageable);
 
     Restaurant findRestaurantByUsername(String username);
 

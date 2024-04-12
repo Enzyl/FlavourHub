@@ -2,6 +2,8 @@ package pl.dlusk.business;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
@@ -48,10 +50,8 @@ public class RestaurantService {
 
     }
 
-    public List<Restaurant> getRestaurantsDeliveringToArea(String streetName) {
-        log.info("########## RestaurantService ##### getRestaurantsDeliveringToArea #### WEJŚCIE: " + streetName);
-        return restaurantDAO.findRestaurantsDeliveringToArea(streetName);
-
+    public Page<Restaurant> getRestaurantsDeliveringToArea(String location, Pageable pageable) {
+        return restaurantDAO.findRestaurantsDeliveringToArea(location, pageable);
     }
 
     public List<Review> getReviewsByRestaurantId(Long restaurantId) {
@@ -73,7 +73,7 @@ public class RestaurantService {
 
 
     public List<RestaurantDeliveryArea> findDeliveryAreaForRestaurant(Long restaurantId) {
-        // Zakładam, że istnieje metoda findDeliveryAreasByRestaurantId w RestaurantDAO
+
         List<RestaurantDeliveryArea> deliveryAreas = restaurantDAO.findDeliveryAreasByRestaurantId(restaurantId);
         log.info("########## RestaurantService ##### findDeliveryAreaForRestaurant #### deliveryAreas: " + deliveryAreas);
         for (int i = 0; i < deliveryAreas.size(); i++) {
@@ -83,7 +83,7 @@ public class RestaurantService {
             if (byId.isPresent()) {
                 RestaurantDeliveryArea updatedDeliveryArea = deliveryArea
                         .withDeliveryStreet(restaurantDeliveryStreetEntityMapper.mapFromEntity(byId.get()));
-                deliveryAreas.set(i, updatedDeliveryArea);  // Zaktualizuj element na liście bezpośrednio
+                deliveryAreas.set(i, updatedDeliveryArea);
 
                 log.info("########## RestaurantService ##### findDeliveryAreaForRestaurant #### updatedDeliveryArea: {}", updatedDeliveryArea);
             }
@@ -102,12 +102,12 @@ public class RestaurantService {
     public void addDeliveryStreetToRestaurant(Long restaurantId, RestaurantDeliveryStreet newDeliveryStreet) {
         log.info("Adding new delivery street to restaurant with ID: {}", restaurantId);
 
-        // Znajdowanie restauracji po ID
+
         Restaurant restaurant = restaurantDAO.findRestaurantById(restaurantId);
 
-        // Ustawienie restauracji dla nowej ulicy dostawy
 
-        // Zapisywanie nowej ulicy dostawy
+
+
         restaurantDAO.addDeliveryAreaForRestaurant(restaurantId,newDeliveryStreet);
 
         log.info("New delivery street added successfully to restaurant with ID: {}", restaurantId);

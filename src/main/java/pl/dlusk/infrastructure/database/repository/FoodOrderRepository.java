@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Cascade;
 import org.springframework.stereotype.Repository;
 import pl.dlusk.business.dao.FoodOrderDAO;
 import pl.dlusk.domain.*;
@@ -96,7 +95,7 @@ public class FoodOrderRepository implements FoodOrderDAO {
         }
         log.info("########## FoodOrderRepository #### save # orderItemEntities " + orderItemEntities);
 
-        // Zapis każdego OrderItemEntity
+
         orderItemsJpaRepository.saveAll(orderItemEntities);
 
         return savedFoodOrder;
@@ -143,15 +142,15 @@ public class FoodOrderRepository implements FoodOrderDAO {
 
     @Override
     public void deleteById(Long id) {
-        // Opcjonalnie, możesz dodać logikę sprawdzającą, czy zamówienie o danym ID istnieje,
-        // aby rzucić wyjątek, jeśli nie. To zapewni lepszą informację zwrotną dla użytkownika
-        // lub serwisu wywołującego tę metodę, gdy próbuje usunąć nieistniejące zamówienie.
+
+
+
         boolean exists = foodOrderJpaRepository.existsById(id);
         if (!exists) {
             throw new ResourceNotFoundException("FoodOrder with id " + id + " not found.");
         }
 
-        // Usuwanie zamówienia o podanym ID
+
         foodOrderJpaRepository.deleteById(id);
     }
 
@@ -187,23 +186,23 @@ public class FoodOrderRepository implements FoodOrderDAO {
 
     @Override
     public Set<OrderItem> findOrderItemsByFoodOrderId(Long foodOrderId) {
-        // Pobieranie listy OrderItemEntity na podstawie foodOrderId
+
         List<OrderItemEntity> orderItemEntities = orderItemsJpaRepository.findByFoodOrderEntityId(foodOrderId);
         log.info("########## FoodOrderRepository #### findOrderItemsByFoodOrderId for foodOrderId [" + foodOrderId + "] #  orderItemEntities: " + orderItemEntities);
 
-        // Opcjonalnie pobieranie FoodOrder na podstawie foodOrderId, jeśli będzie potrzebny do przypisania do OrderItem
+
         Optional<FoodOrderEntity> foodOrderEntityOpt = foodOrderJpaRepository.findById(foodOrderId);
         if (foodOrderEntityOpt.isEmpty()) {
             throw new ResourceNotFoundException("FoodOrder not found with id: " + foodOrderId);
         }
         FoodOrder foodOrder = foodOrderEntityMapper.mapFromEntity(foodOrderEntityOpt.get());
 
-        // Konwersja OrderItemEntity na OrderItem i przypisanie MenuItem oraz FoodOrder do każdego OrderItem
+
         return orderItemEntities.stream()
                 .map(orderItemEntity -> {
                     MenuItem menuItem = menuItemEntityMapper.mapFromEntity(orderItemEntity.getMenuItemEntity());
                     OrderItem orderItem = orderItemEntityMapper.mapFromEntity(orderItemEntity);
-                    return orderItem.withMenuItem(menuItem).withFoodOrder(foodOrder); // Używając metod 'with', zakładam, że masz w klasie OrderItem odpowiednie metody ustawiające te pola.
+                    return orderItem.withMenuItem(menuItem).withFoodOrder(foodOrder);
                 })
                 .collect(Collectors.toSet());
     }

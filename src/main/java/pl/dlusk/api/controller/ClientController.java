@@ -1,19 +1,20 @@
 package pl.dlusk.api.controller;
 
 import jakarta.servlet.http.HttpSession;
-import org.springframework.web.bind.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.thymeleaf.model.IModel;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.dao.FoodOrderDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import pl.dlusk.infrastructure.database.repository.jpa.OrderItemsJpaRepository;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
@@ -23,7 +24,10 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Controller
@@ -103,6 +107,15 @@ public class ClientController {
         session.setAttribute("user", user);
 
         model.addAttribute("username", user.getUsername());
+
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            Object attributeValue = session.getAttribute(attributeName);
+            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
+        }
+
+
         return "clientLoggedInView";
     }
 
@@ -188,6 +201,7 @@ public class ClientController {
         session.removeAttribute("payment");
         session.removeAttribute("totalValue");
         session.removeAttribute("restaurantId");
+        session.removeAttribute("location");
         session.setAttribute("uniqueFoodNumber",uniqueFoodNumber);
 
         return "redirect:/showOrderSummary";
