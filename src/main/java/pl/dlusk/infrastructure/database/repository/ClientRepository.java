@@ -8,7 +8,6 @@ import pl.dlusk.business.dao.ClientDAO;
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.FoodOrder;
 import pl.dlusk.infrastructure.database.entity.ClientEntity;
-import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.ClientJpaRepository;
 import pl.dlusk.infrastructure.database.repository.mapper.ClientEntityMapper;
 import pl.dlusk.infrastructure.database.repository.mapper.FoodOrderEntityMapper;

@@ -28,7 +28,7 @@ public class ClientService {
     private final FoodOrderDAO foodOrderDAO;
     private final RestaurantDAO restaurantDAO;
     private final PaymentDAO paymentDAO;
-
+    private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
     private final FoodOrderService foodOrderService;
 
     @Transactional
@@ -36,16 +36,12 @@ public class ClientService {
         return clientDAO.save(client,user);
     }
 
-    @Transactional
-    public void deactivateAccount(Client client){
-        clientDAO.deactivateAccount(client.getUser().getUserId());
-    }
 
     @Transactional
-    public ClientOrderHistory getClientOrderHistory(Long clientId) {
+    public ClientOrderHistory getClientOrderHistory(String username) {
+        Long clientId = foodOrderingAppUserDAO.findIdByUsername(username);
         log.info("########## ClientService #### getClientOrderHistory #  START");
         log.info("########## ClientService #### getClientOrderHistory #  clientId {}",clientId);
-
         List<FoodOrder> foodOrders = clientDAO.findOrdersByClientId(clientId);
 
         List<ClientOrderHistory.FoodOrderRequest> foodOrderRequests = foodOrders.stream()

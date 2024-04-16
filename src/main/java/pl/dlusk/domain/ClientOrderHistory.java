@@ -1,6 +1,9 @@
 package pl.dlusk.domain;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.ToString;
+import lombok.Value;
+import lombok.With;
 
 import java.math.BigDecimal;
 import java.time.Duration;

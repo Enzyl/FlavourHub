@@ -36,25 +36,6 @@ public class OwnerController {
     private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
     private final OwnerDAO ownerDAO;
 
-    @GetMapping("/registerOwner")
-    public String showOwnerRegistrationForm(Model model) {
-        Owner owner = Owner.builder()
-                .name("")
-                .surname("")
-                .phoneNumber("")
-                .nip("")
-                .regon("")
-                .user(FoodOrderingAppUser.builder()
-                        .username("")
-                        .password("")
-                        .email("")
-                        .role("ROLE_OWNER")
-                        .enabled(true)
-                        .build())
-                .build();
-        model.addAttribute("owner", owner);
-        return "registerOwner";
-    }
 
     @PostMapping("/registerOwner")
     public String registerOwner(@RequestParam("name") String name,
@@ -73,7 +54,7 @@ public class OwnerController {
                 .username(username)
                 .password(password)
                 .email(email)
-                .role("OWNER")
+                .role(Roles.OWNER.toString())
                 .enabled(enabled)
                 .build();
 
@@ -102,13 +83,6 @@ public class OwnerController {
 
         String username = (String) session.getAttribute("username");
         log.info("########## OwnerController #### showOwnerLoggedInView #  username   " + username);
-
-        Enumeration<String> attributeNames = session.getAttributeNames();
-        while (attributeNames.hasMoreElements()) {
-            String attributeName = attributeNames.nextElement();
-            Object attributeValue = session.getAttribute(attributeName);
-            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
-        }
 
         FoodOrderingAppUser user = foodOrderingAppUserRepository.findByUsername(username);
         session.setAttribute("user", user);
@@ -141,8 +115,6 @@ public class OwnerController {
         session.setAttribute("restaurant", restaurantByUsername);
         log.info("########## OwnerController #### showOwnerLoggedInView #  FINISHED");
 
-
-
         return "ownerRestaurantInfo";
     }
 
@@ -153,18 +125,17 @@ public class OwnerController {
         Restaurant restaurantByUsername = restaurantService.getRestaurantByUsername(username);
         Long restaurantId = restaurantByUsername.getRestaurantId();
 
-        log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH restaurantId {}", restaurantId);
+        log.info("########## OwnerController #### showOrdersInProgress # restaurantId {}", restaurantId);
         List<FoodOrder> foodOrdersForRestaurant = foodOrderService.getFoodOrdersByRestaurant(restaurantId);
 
-        log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH foodOrdersForRestaurant {}",
+        log.info("########## OwnerController #### showOrdersInProgress # foodOrdersForRestaurant {}",
                 foodOrdersForRestaurant);
 
         List<FoodOrder> foodOrdersInProgress = foodOrdersForRestaurant
-                .stream().filter(a -> a.getFoodOrderStatus().equals("Confirmed")).toList();
+                .stream().filter(a -> a.getFoodOrderStatus().equals(FoodOrderStatus.CONFIRMED.toString())).toList();
         Restaurant restaurant = restaurantDAO.findRestaurantById(restaurantId);
 
-
-        List<FoodOrder> fooOrdeersInProgresWithRestaurant = foodOrdersInProgress.stream().map(
+        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrdersInProgress.stream().map(
                 foodOrder -> {
                     Long foodOrderId = foodOrder.getFoodOrderId();
                     Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
@@ -173,9 +144,9 @@ public class OwnerController {
                 }
         ).toList();
 
-        model.addAttribute("foodOrdersInProgress", fooOrdeersInProgresWithRestaurant);
+        model.addAttribute("foodOrdersInProgress", fooOrdersInProgressWithRestaurant);
         log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH foodOrdersInProgress {}",
-                fooOrdeersInProgresWithRestaurant);
+                fooOrdersInProgressWithRestaurant);
         return "foodOrdersForRestaurantInProgressView";
     }
 

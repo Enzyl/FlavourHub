@@ -1,6 +1,5 @@
 package pl.dlusk.business.dao;
 
-import org.springframework.data.jpa.repository.Query;
 import pl.dlusk.domain.Owner;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 

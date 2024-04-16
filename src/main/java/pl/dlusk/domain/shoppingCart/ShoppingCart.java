@@ -1,6 +1,9 @@
 package pl.dlusk.domain.shoppingCart;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.With;
 import lombok.extern.slf4j.Slf4j;
 import pl.dlusk.domain.MenuItem;
 

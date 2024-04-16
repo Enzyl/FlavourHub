@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import pl.dlusk.business.CloudinaryService;
 import pl.dlusk.business.RestaurantService;
 import pl.dlusk.business.dao.OwnerDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
@@ -19,6 +21,7 @@ import pl.dlusk.infrastructure.database.repository.jpa.MenuJpaRepository;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,11 +30,12 @@ import java.util.stream.Collectors;
 @Controller
 @AllArgsConstructor
 public class RestaurantController {
-    private final MenuJpaRepository menuJpaRepository;
     private final RestaurantDAO restaurantDAO;
     private FoodOrderingAppUserRepository foodOrderingAppUserRepository;
     private final OwnerDAO ownerDAO;
-private final RestaurantService restaurantService;
+    private final RestaurantService restaurantService;
+    private final CloudinaryService cloudinaryService;
+
     @GetMapping("/restaurantMenu/{restaurantId}")
     public String showRestaurantMenu(@PathVariable Long restaurantId, Model model, HttpSession session) {
         log.info("########## RestaurantController ##### showRestaurantMenu #### restaurantId: " + restaurantId);
@@ -169,14 +173,13 @@ private final RestaurantService restaurantService;
         log.info("Registered restaurant : {}", savedRestaurant);
 
 
-
         redirectAttributes.addFlashAttribute("successMessage", "Restauracja " + name + " została pomyślnie zarejestrowana.");
         session.setAttribute("restaurant", savedRestaurant);
         return "redirect:/showAddingDeliveryStreetsView";
     }
 
     @GetMapping("/showAddingDeliveryStreetsView")
-    public String   showAddingDeliveryStreetsView(HttpSession session, Model model) {
+    public String showAddingDeliveryStreetsView(HttpSession session, Model model) {
 
         Enumeration<String> attributeNames = session.getAttributeNames();
         while (attributeNames.hasMoreElements()) {
@@ -187,7 +190,7 @@ private final RestaurantService restaurantService;
 
         Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
         Long restaurantId = restaurant.getRestaurantId();
-        List<RestaurantDeliveryArea> restaurantDeliveryAreas =  restaurantService
+        List<RestaurantDeliveryArea> restaurantDeliveryAreas = restaurantService
                 .findDeliveryAreaForRestaurant(restaurantId);
         log.info("########## RestaurantController ##### showAddingDeliveryStreetsView # restaurantDeliveryAreas : " + restaurantDeliveryAreas);
 
@@ -204,10 +207,11 @@ private final RestaurantService restaurantService;
         List<RestaurantDeliveryArea> testAreas = new ArrayList<>();
         testAreas.add(testArea);
 
-        model.addAttribute("restaurantDeliveryAreas",restaurantDeliveryAreas);
-        session.setAttribute("restaurantDeliveryAreas",restaurantDeliveryAreas);
+        model.addAttribute("restaurantDeliveryAreas", restaurantDeliveryAreas);
+        session.setAttribute("restaurantDeliveryAreas", restaurantDeliveryAreas);
         return "addingDeliveryStreetView";
     }
+
     @PostMapping("/addDeliveryStreet")
     public String addDeliveryStreet(@RequestParam("streetName") String streetName,
                                     @RequestParam("postalCode") String postalCode,
@@ -234,29 +238,20 @@ private final RestaurantService restaurantService;
 
 
     @GetMapping("/showAddMenuToTheRestaurantView")
-    public String   addMenuToTheRestaurantView(HttpSession session) {
-
-
+    public String addMenuToTheRestaurantView(HttpSession session) {
 
         Owner owner = ownerDAO.findByUsername((String) session.getAttribute("username"));
-
-
-
         Restaurant restaurantByOwnerId = restaurantDAO.getRestaurantByOwnerId(owner.getOwnerId());
-
 
         List<RestaurantDeliveryArea> deliveryAreaForRestaurant = restaurantService
                 .findDeliveryAreaForRestaurant(restaurantByOwnerId.getRestaurantId());
 
         log.info("########## RestaurantController ##### addMenuToTheRestaurantView # deliveryAreaForRestaurant : " + deliveryAreaForRestaurant);
 
-
         boolean b = deliveryAreaForRestaurant.size() == 0;
 
-        session.setAttribute("restaurant",restaurantByOwnerId);
-        if (b){
-
-
+        session.setAttribute("restaurant", restaurantByOwnerId);
+        if (b) {
 
             return "redirect:/showAddingDeliveryStreetsView";
         }
@@ -289,7 +284,7 @@ private final RestaurantService restaurantService;
     }
 
     @GetMapping("/addItemsToTheMenuView")
-    public String addMenuItemsToTheMenu(HttpSession session, Model model) {
+    public String addMenuItemsToTheMenuView(HttpSession session, Model model) {
         log.info("########## RestaurantController ##### addMenuItemsToTheMenu # START");
 
         Menu menu = (Menu) session.getAttribute("menuToUpdate");
@@ -307,7 +302,7 @@ private final RestaurantService restaurantService;
         if (restaurant == null) {
             log.info("########## RestaurantController ##### addMenuItemsToTheMenu # restaurant == null ");
             restaurant = restaurantDAO.findRestaurantByUsername(username);
-            session.setAttribute("restaurant",restaurant);
+            session.setAttribute("restaurant", restaurant);
         }
 
         log.info("########## RestaurantController ##### addMenuItemsToTheMenu # restaurant: {}", restaurant);
@@ -315,7 +310,7 @@ private final RestaurantService restaurantService;
         if (menu == null) {
             log.info("########## RestaurantController ##### addMenuItemsToTheMenu # menu == null");
             menu = restaurantDAO.findMenuRestaurantById(restaurant.getRestaurantId());
-            session.setAttribute("menu",menu);
+            session.setAttribute("menu", menu);
         }
 
         Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
@@ -339,26 +334,34 @@ private final RestaurantService restaurantService;
 
         return "addingMenuItemsToTheMenu";
     }
+
     @PostMapping("/addMenuItemToMenu")
     public String addMenuItemToSession(
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("price") BigDecimal price,
             @RequestParam("category") String category,
-            HttpSession session) {
+            @RequestParam("image") MultipartFile image,
+            HttpSession session) throws IOException {
 
         Menu menu = (Menu) session.getAttribute("menuToUpdate");
         Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
         if (menuItems == null) {
             menuItems = new HashSet<>();
         }
+
+        Map uploadResult = cloudinaryService.uploadImage(image);
+        String imageUrl = (String) uploadResult.get("url");
+
         MenuItem menuItem = MenuItem.builder()
                 .name(name)
                 .description(description)
                 .price(price)
                 .category(category)
                 .menu(menu)
+                .imagePath(imageUrl) // Zapisz URL obrazu
                 .build();
+
         log.info("########## RestaurantController ##### addMenuItemToSession # menuItem TO ADD: {}", menuItem);
 
         menuItems.add(menuItem);
@@ -367,8 +370,9 @@ private final RestaurantService restaurantService;
 
         return "redirect:/addItemsToTheMenuView";
     }
+
     @GetMapping("/addAllMenuItemsToMenu")
-    public String addAllMenuItemsToMenu(HttpSession session, Model model){
+    public String addAllMenuItemsToMenu(HttpSession session) {
         Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
         Menu menu = (Menu) session.getAttribute("menuToUpdate");
 
@@ -378,16 +382,16 @@ private final RestaurantService restaurantService;
             Object attributeValue = session.getAttribute(attributeName);
             log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
         }
-        if (menu.getMenuId() == null){
+        if (menu.getMenuId() == null) {
             FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
             Restaurant restaurantByUsername = restaurantDAO.findRestaurantByUsername(user.getUsername());
             menu = restaurantDAO.findMenuRestaurantById(restaurantByUsername.getRestaurantId());
         }
         log.info("########## RestaurantController ##### addAllMenuItemsToMenu # session.setAttribute(\"menu\",menu): {}", menu);
 
-        session.setAttribute("menu",menu);
+        session.setAttribute("menu", menu);
         for (MenuItem menuItem : menuItems) {
-            restaurantService.addMenuItemToTheMenu(menuItem,menu);
+            restaurantService.addMenuItemToTheMenu(menuItem, menu);
         }
         session.removeAttribute("menuToUpdate");
         session.removeAttribute("groupedMenuItems");
@@ -396,10 +400,10 @@ private final RestaurantService restaurantService;
     }
 
     @GetMapping("/changeMenu")
-    public String changeMenu(HttpSession session, Model model){
+    public String changeMenu(HttpSession session, Model model) {
         Menu menu = (Menu) session.getAttribute("menu");
         log.info("########## RestaurantController ##### changeMenu # menu: {}", menu);
-        if (menu == null){
+        if (menu == null) {
             FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
             Restaurant restaurantByUsername = restaurantDAO.findRestaurantByUsername(user.getUsername());
             menu = restaurantDAO.findMenuRestaurantById(restaurantByUsername.getRestaurantId());
@@ -416,6 +420,6 @@ private final RestaurantService restaurantService;
 
         restaurantDAO.deleteMenu(menu);
 
-    return "redirect:/showAddMenuToTheRestaurantView";
+        return "redirect:/showAddMenuToTheRestaurantView";
     }
 }

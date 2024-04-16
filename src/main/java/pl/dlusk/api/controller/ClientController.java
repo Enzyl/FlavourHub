@@ -12,12 +12,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.dao.FoodOrderDAO;
-import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import pl.dlusk.infrastructure.database.repository.jpa.OrderItemsJpaRepository;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
 import java.math.BigDecimal;
@@ -37,33 +34,6 @@ public class ClientController {
     private final ClientService clientService;
     private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
     private final FoodOrderService foodOrderService;
-    private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
-    private final FoodOrderDAO foodOrderDAO;
-    private final RestaurantDAO restaurantDAO;
-    private final OrderItemsJpaRepository orderItemsJpaRepository;
-
-
-    @GetMapping("/registerClient")
-    public String showRegistrationForm(Model model) {
-
-        FoodOrderingAppUser user = FoodOrderingAppUser.builder()
-                .username("")
-                .password("")
-                .email("")
-                .role("ROLE_USER")
-                .enabled(true)
-                .build();
-
-
-        Client client = Client.builder()
-                .fullName("")
-                .phoneNumber("")
-                .user(user)
-                .build();
-        model.addAttribute("client", client);
-        return "registerClient";
-    }
-
 
     @PostMapping("/registerClient")
     public String registerClient(@RequestParam("fullName") String fullName,
@@ -79,9 +49,10 @@ public class ClientController {
                 .username(username)
                 .password(password)
                 .email(email)
-                .role("CLIENT")
+                .role(Roles.CLIENT.toString())
                 .enabled(enabled)
                 .build();
+
         log.info("########## ClientController #### registerClient #  user  " + user.toString());
 
         Client client = Client.builder()
@@ -108,13 +79,14 @@ public class ClientController {
 
         model.addAttribute("username", user.getUsername());
 
+
+        // to delete
         Enumeration<String> attributeNames = session.getAttributeNames();
         while (attributeNames.hasMoreElements()) {
             String attributeName = attributeNames.nextElement();
             Object attributeValue = session.getAttribute(attributeName);
             log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
         }
-
 
         return "clientLoggedInView";
     }
@@ -184,7 +156,10 @@ public class ClientController {
 
         Long restaurantId = (Long) session.getAttribute("restaurantId");
         FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
-        Long clientId = foodOrderingAppUserRepository.findIdByUsername(user.getUsername());
+
+        String username = user.getUsername();
+
+
         BigDecimal totalValue = (BigDecimal) session.getAttribute("totalValue");
 
         Delivery delivery = (Delivery) session.getAttribute("delivery");
@@ -193,7 +168,7 @@ public class ClientController {
         log.info("########## ClientController #### processOrder #  shoppingCart {}", shoppingCart);
 
         String uniqueFoodNumber = foodOrderService.createFoodOrder(
-                restaurantId, clientId, totalValue, delivery, payment, shoppingCart);
+                restaurantId, username, totalValue, delivery, payment, shoppingCart);
         log.info("########## ClientController #### processOrder #  foodOrder saved");
 
         session.removeAttribute("delivery");
@@ -210,46 +185,29 @@ public class ClientController {
     @GetMapping("/showOrderSummary")
     public String showOrderSummary(HttpSession session, Model model) {
         String uniqueFoodNumber = (String) session.getAttribute("uniqueFoodNumber");
-        FoodOrder foodOrderByOrderNumber = foodOrderService.findFoodOrderByOrderNumber(uniqueFoodNumber);
 
-        Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderByOrderNumber.getFoodOrderId());
-        FoodOrder foodOrderWithOrderItems = foodOrderByOrderNumber.withOrderItems(orderItemsByFoodOrderId);
+        FoodOrder foodOrder = foodOrderService.showOrderSummary(uniqueFoodNumber);
 
-        model.addAttribute("foodOrderWithOrderItems",foodOrderWithOrderItems);
+        model.addAttribute("foodOrderWithOrderItems",foodOrder);
         return "orderSummaryView";
-    }
-
-    @GetMapping("/sessionAttributes")
-    public String showSessionAttributes(HttpSession session, Model model) {
-        Map<String, Object> attributes = new HashMap<>();
-        session.getAttributeNames().asIterator().forEachRemaining(attributeName ->
-                attributes.put(attributeName, session.getAttribute(attributeName))
-        );
-        model.addAttribute("attributes", attributes);
-        return "sessionAttributes";
     }
 
     @GetMapping("/userOrders")
     public String showClientOrders(HttpSession session, Model model) {
-        FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
-        Long clientId = foodOrderingAppUserDAO.findIdByUsername(user.getUsername());
-        ClientOrderHistory clientOrderHistory = clientService.getClientOrderHistory(clientId);
-
+        String username = ((FoodOrderingAppUser) session.getAttribute("user")).getUsername();
+        ClientOrderHistory clientOrderHistory = clientService.getClientOrderHistory(username);
         log.info("########## ClientController #### showClientOrders #  clientOrderHistory: " + clientOrderHistory);
         model.addAttribute("clientOrderHistory", clientOrderHistory);
         return "userOrders";
     }
 
     @PostMapping("/cancelOrder")
-    public String cancelOrder(@RequestParam("orderId") Long orderId, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String cancelOrder(@RequestParam("orderId") Long orderId, RedirectAttributes redirectAttributes) {
         log.info("########## ClientController #### cancelOrder #  START ");
         FoodOrder foodOrder = foodOrderService.getFoodOrderById(orderId);
-        log.info("########## ClientController #### cancelOrder #  foodOrder.getOrderTime(): " + foodOrder.getOrderTime());
-        log.info("########## ClientController #### cancelOrder #  Duration.between(foodOrder.getOrderTime(), LocalDateTime.now()).toMinutes(): " + Duration.between(foodOrder.getOrderTime(), LocalDateTime.now()).toMinutes());
-
 
         if (Duration.between(foodOrder.getOrderTime(), LocalDateTime.now()).toMinutes() <= 20) {
-            foodOrderService.updateFoodOrderStatus(orderId, "Cancelled");
+            foodOrderService.updateFoodOrderStatus(orderId, FoodOrderStatus.CANCELLED.toString());
             redirectAttributes.addFlashAttribute("successMessage", "Order has been cancelled successfully.");
             log.info("########## ClientController #### cancelOrder #  Order with ID [" + orderId + "] HAS BEEN CANCELED");
         } else {
@@ -258,5 +216,16 @@ public class ClientController {
         log.info("########## ClientController #### cancelOrder #  FINISH ");
 
         return "redirect:/userOrders";
+    }
+
+    // do usunięcia
+    @GetMapping("/sessionAttributes")
+    public String showSessionAttributes(HttpSession session, Model model) {
+        Map<String, Object> attributes = new HashMap<>();
+        session.getAttributeNames().asIterator().forEachRemaining(attributeName ->
+                attributes.put(attributeName, session.getAttribute(attributeName))
+        );
+        model.addAttribute("attributes", attributes);
+        return "sessionAttributes";
     }
 }

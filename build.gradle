@@ -64,6 +64,13 @@ dependencies {
     testImplementation "org.slf4j:slf4j-api:${wiremockSlf4jVersion}"
     testImplementation "com.github.tomakehurst:wiremock-standalone:${wiremockVersion}"
     testImplementation "io.rest-assured:rest-assured:${restAssuredVersion}"
+
+
+    //For Gradle, add to dependencies section of build.gradle
+    compileOnly group: 'com.cloudinary', name: 'cloudinary-http44', version: '1.26.0'
+
+
+
 }
 
 dependencyManagement {

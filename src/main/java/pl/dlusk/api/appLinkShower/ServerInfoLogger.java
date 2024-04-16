@@ -1,6 +1,5 @@
 package pl.dlusk.api.appLinkShower;
 
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;

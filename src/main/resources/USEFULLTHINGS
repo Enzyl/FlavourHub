@@ -1,1 +1,10 @@
 log.info("########## NAZWAKLASY ##### NAZWAMETODY #### WEJŚCIE: " + streetName );
+
+
+
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String attributeName = attributeNames.nextElement();
+            Object attributeValue = session.getAttribute(attributeName);
+            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
+        }

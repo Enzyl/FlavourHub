@@ -1,6 +1,5 @@
 package pl.dlusk.business.dao;
 
-import org.springframework.data.repository.query.Param;
 import pl.dlusk.domain.FoodOrder;
 import pl.dlusk.domain.OrderItem;
 import pl.dlusk.domain.Review;

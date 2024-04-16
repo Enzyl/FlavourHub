@@ -11,6 +11,7 @@ import pl.dlusk.domain.*;
 import pl.dlusk.domain.exception.ResourceNotFoundException;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
+import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class FoodOrderService {
     private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
     private final ClientDAO clientDAO;
     private final RestaurantDAO restaurantDAO;
+    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
     @Transactional
     public FoodOrder createOrUpdateFoodOrder(FoodOrder foodOrder) {
         return foodOrderDAO.save(foodOrder);
@@ -69,8 +71,9 @@ public class FoodOrderService {
     public Review addReviewToRestaurant(Long orderId, Review review) {
         return foodOrderDAO.addReview(orderId,review);
     }
-    public String createFoodOrder(Long restaurantId, Long clientId, BigDecimal totalValue, Delivery delivery, Payment payment, ShoppingCart shoppingCart) {
+    public String createFoodOrder(Long restaurantId, String username, BigDecimal totalValue, Delivery delivery, Payment payment, ShoppingCart shoppingCart) {
         log.info("########## FoodOrderService #### createFoodOrder # START");
+        Long clientId = foodOrderingAppUserRepository.findIdByUsername(username);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDateTime = LocalDateTime.now().format(formatter);
@@ -131,5 +134,12 @@ public class FoodOrderService {
 
         log.info("########## FoodOrderService #### findFoodOrderByOrderNumber # FINISHC");
         return foodOrder;
+    }
+    public FoodOrder showOrderSummary(String uniqueFoodNumber){
+
+        FoodOrder foodOrderByOrderNumber = findFoodOrderByOrderNumber(uniqueFoodNumber);
+        Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderByOrderNumber.getFoodOrderId());
+        FoodOrder foodOrderWithOrderItems = foodOrderByOrderNumber.withOrderItems(orderItemsByFoodOrderId);
+        return foodOrderWithOrderItems;
     }
 }
