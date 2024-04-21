@@ -16,6 +16,7 @@ import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -32,8 +33,8 @@ public class ClientService {
     private final FoodOrderService foodOrderService;
 
     @Transactional
-    public Client registerClient(Client client, FoodOrderingAppUser user){
-        return clientDAO.save(client,user);
+    public Client registerClient(Client client, FoodOrderingAppUser user) {
+        return clientDAO.save(client, user);
     }
 
 
@@ -41,7 +42,7 @@ public class ClientService {
     public ClientOrderHistory getClientOrderHistory(String username) {
         Long clientId = foodOrderingAppUserDAO.findIdByUsername(username);
         log.info("########## ClientService #### getClientOrderHistory #  START");
-        log.info("########## ClientService #### getClientOrderHistory #  clientId {}",clientId);
+        log.info("########## ClientService #### getClientOrderHistory #  clientId {}", clientId);
         List<FoodOrder> foodOrders = clientDAO.findOrdersByClientId(clientId);
 
         List<ClientOrderHistory.FoodOrderRequest> foodOrderRequests = foodOrders.stream()
@@ -79,7 +80,7 @@ public class ClientService {
     }
 
     public Client getClientByUsername(String username) {
-        log.info("########## ClientService #### getClientByUsername #  START " );
+        log.info("########## ClientService #### getClientByUsername #  START ");
 
         Long clientId = foodOrderingAppUserRepository.findIdByUsername(username);
         log.info("########## ClientService #### getClientByUsername #  clientId: " + clientId);
@@ -88,6 +89,14 @@ public class ClientService {
         log.info("########## ClientService #### getClientByUsername #  client: " + client);
         return client;
     }
+
+    public FoodOrderingAppUser getUserByUsername(String username) {
+        FoodOrderingAppUser user = foodOrderingAppUserRepository.findByUsername(username);
+
+        return user;
+    }
+
+
 
 
 

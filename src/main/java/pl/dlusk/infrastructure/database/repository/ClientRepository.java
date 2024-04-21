@@ -62,6 +62,7 @@ public class ClientRepository implements ClientDAO {
 
         ClientEntity savedNewClient = clientJpaRepository.save(clientEntity);
 
+
         return clientEntityMapper.mapFromEntity(savedNewClient).withUser(user);
     }
 

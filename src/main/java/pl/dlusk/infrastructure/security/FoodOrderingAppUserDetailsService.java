@@ -33,14 +33,15 @@ public class FoodOrderingAppUserDetailsService implements UserDetailsService {
     }
 
     private UserDetails buildUserForAuthentication(FoodOrderingAppUserEntity user, List<GrantedAuthority> authorities) {
-        return new User(
+        return new FoodOrderingAppUser(
+                user.getId(),
                 user.getUsername(),
                 user.getPassword(),
+                user.getEmail(),
+                user.getRole(),
                 user.getEnabled(),
-                true,
-                true,
-                true,
                 authorities
         );
     }
+
 }

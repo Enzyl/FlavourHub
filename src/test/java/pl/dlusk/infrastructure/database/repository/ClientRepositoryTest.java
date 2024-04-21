@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.FoodOrder;
+import pl.dlusk.domain.FoodOrderStatus;
 import pl.dlusk.infrastructure.database.entity.ClientEntity;
 import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.ClientJpaRepository;
@@ -72,14 +73,14 @@ class ClientRepositoryTest {
         foodOrder = FoodOrder.builder()
                 .foodOrderId(1L)
                 .orderTime(LocalDateTime.now())
-                .foodOrderStatus("Przygotowanie")
+                .foodOrderStatus(FoodOrderStatus.CONFIRMED.toString())
                 .totalPrice(new BigDecimal("100.00"))
                 .build();
     }
 
     @Test
     void findByIdShouldReturnClient() {
-        when(clientJpaRepository.findById(1L)).thenReturn(Optional.of(clientEntity));
+        when(clientJpaRepository.findByUserId(1L)).thenReturn(Optional.of(clientEntity));
         when(clientEntityMapper.mapFromEntity(clientEntity)).thenReturn(client);
 
         Client foundClient = clientRepository.findByUserId(1L);
@@ -89,7 +90,7 @@ class ClientRepositoryTest {
         assertThat(foundClient.getFullName()).isEqualTo(client.getFullName());
         assertThat(foundClient.getPhoneNumber()).isEqualTo(client.getPhoneNumber());
 
-        verify(clientJpaRepository, times(1)).findById(1L);
+        verify(clientJpaRepository, times(1)).findByUserId(1L);
         verify(clientEntityMapper, times(1)).mapFromEntity(clientEntity);
     }
 
@@ -163,22 +164,22 @@ class ClientRepositoryTest {
     }
     @Test
     void findOrdersByClientIdShouldReturnListOfOrders() {
-        // Symulowanie zachowania zależności
         ClientEntity mockClientEntity = new ClientEntity();
+        mockClientEntity.setId(1L); // Ensure the client entity is properly identified
         mockClientEntity.setFoodOrderEntities(foodOrderEntities);
 
-        when(clientJpaRepository.findById(anyLong())).thenReturn(Optional.of(mockClientEntity));
+        when(clientJpaRepository.findByUserId(1L)).thenReturn(Optional.of(mockClientEntity));
         when(foodOrderEntityMapper.mapFromEntity(any(FoodOrderEntity.class))).thenReturn(foodOrder);
 
-
-        // Wywołanie testowanej metody
         List<FoodOrder> orders = clientRepository.findOrdersByClientId(1L);
 
-        // Weryfikacja wyników
         assertThat(orders).isNotNull().hasSize(1);
         FoodOrder retrievedOrder = orders.get(0);
         assertThat(retrievedOrder.getFoodOrderId()).isEqualTo(foodOrder.getFoodOrderId());
-        // Sprawdź pozostałe pola obiektu FoodOrder
+        assertThat(retrievedOrder.getTotalPrice()).isEqualTo(foodOrder.getTotalPrice()); // Additional properties checks
+        assertThat(retrievedOrder.getOrderTime()).isEqualTo(foodOrder.getOrderTime());
+        assertThat(retrievedOrder.getFoodOrderStatus()).isEqualTo(foodOrder.getFoodOrderStatus());
     }
+
 
 }

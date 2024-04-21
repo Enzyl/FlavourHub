@@ -11,6 +11,10 @@
             padding: 20px;
             border-radius: 5px;
         }
+        .menu-item-image {
+            width: 100px; /* Ustaw odpowiednią szerokość */
+            height: auto; /* Zachowaj proporcje */
+        }
     </style>
 </head>
 <body>
@@ -44,7 +48,8 @@
                         <th>Opis</th>
                         <th>Kategoria</th>
                         <th>Cena</th>
-                        <th></th> <!-- Usunięto kolumnę Ilość -->
+                        <th>Obraz</th>
+                        <th></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -53,6 +58,7 @@
                         <td th:text="${menuItem.description}"></td>
                         <td th:text="${menuItem.category}"></td>
                         <td th:text="${menuItem.price}"></td>
+                        <td><img th:src="${menuItem.imagePath}" class="menu-item-image" alt="Menu Item Image"></td>
                         <td>
                             <form th:action="@{/addToCart}" method="post">
                                 <input type="hidden" name="menuItemId" th:value="${menuItem.menuItemId}">
@@ -67,8 +73,6 @@
             <a th:href="@{/deliveryAddress}" class="btn btn-success">Przejdź do adresu dostawy</a>
         </div>
 
-
-
         <div class="col-md-4 cart-panel">
             <h2>Koszyk</h2>
             <div th:if="${not #maps.isEmpty(shoppingCart.items)}">
@@ -76,7 +80,6 @@
                     <li th:each="itemEntry : ${shoppingCart.items.entrySet()}">
                         <span th:text="${itemEntry.key.name}">Nazwa przedmiotu</span>
                         <span th:text="${itemEntry.value}">Ilość</span>
-                        <!-- Guziki do modyfikacji ilości -->
                         <form th:action="@{/updateCartItem}" method="post" style="display:inline;">
                             <input type="hidden" name="menuItemId" th:value="${itemEntry.key.menuItemId}">
                             <input type="hidden" name="quantity" th:value="${itemEntry.value + 1}">
@@ -93,9 +96,6 @@
             <p th:if="${#maps.isEmpty(shoppingCart.items)}">Twój koszyk jest pusty.</p>
             <h3>Całkowita wartość: <span th:text="${totalValue}">0</span> PLN</h3>
         </div>
-
-
-
     </div>
 </div>
 

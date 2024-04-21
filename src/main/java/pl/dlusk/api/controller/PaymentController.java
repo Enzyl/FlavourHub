@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 @Controller
 @AllArgsConstructor
 public class PaymentController {
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
     @GetMapping("/enterBlikCode")
     public String showBlikCodeForm() {
@@ -30,7 +32,6 @@ public class PaymentController {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedDateTime = LocalDateTime.now().format(formatter);
-
         LocalDateTime paymentTime = LocalDateTime.parse(formattedDateTime, formatter);
 
         Payment payment = Payment.builder()

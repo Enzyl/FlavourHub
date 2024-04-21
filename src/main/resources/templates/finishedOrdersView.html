@@ -10,13 +10,12 @@
 <div class="container mt-4">
     <h2>Zakończone Zamówienia</h2>
     <div class="accordion" id="ordersAccordion">
-        <div th:each="order, orderStat : ${fooOrdersInProgressWithRestaurant}" class="card">
+        <div th:each="order, orderStat : ${finishedFoodOrders}" class="card">
             <div class="card-header" th:id="'heading' + ${orderStat.index}">
                 <h2 class="mb-0">
                     <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" th:data-target="'#collapse' + ${orderStat.index}" aria-expanded="true" th:aria-controls="'collapse' + ${orderStat.index}">
                         <span>Order #<span th:text="${orderStat.count}"></span> - </span>
-                        <span th:text="${order.orderTime}"></span> from
-                        <span th:text="${order.restaurant.name}"></span>
+                        <span th:text="${order.orderTime}"></span>
                     </button>
                 </h2>
             </div>

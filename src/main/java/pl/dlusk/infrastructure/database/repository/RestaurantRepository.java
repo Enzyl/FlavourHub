@@ -7,12 +7,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import pl.dlusk.business.CloudinaryService;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.infrastructure.database.entity.*;
 import pl.dlusk.infrastructure.database.repository.jpa.*;
 import pl.dlusk.infrastructure.database.repository.mapper.*;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +52,8 @@ public class RestaurantRepository implements RestaurantDAO {
 
     private final RestaurantDeliveryStreetEntityMapper restaurantDeliveryStreetEntityMapper;
     private final RestaurantDeliveryStreetJpaRepository restaurantDeliveryStreetJpaRepository;
+
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public Restaurant getRestaurantByOwnerId(Long ownerId) {
@@ -256,6 +260,11 @@ public class RestaurantRepository implements RestaurantDAO {
         for (MenuItem menuItem : menuItems) {
             MenuItemEntity menuItemEntity = menuItemEntityMapper.mapToEntity(menuItem);
             menuItemJpaRepository.delete(menuItemEntity);
+            try {
+                cloudinaryService.deleteImage(menuItemEntity.getImagePath());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
         }
         MenuEntity menuEntity = menuEntityMapper.mapToEntity(menu);

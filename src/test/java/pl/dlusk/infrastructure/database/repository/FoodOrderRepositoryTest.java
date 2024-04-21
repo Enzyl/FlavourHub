@@ -1,22 +1,18 @@
 package pl.dlusk.infrastructure.database.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pl.dlusk.domain.FoodOrder;
-import pl.dlusk.domain.MenuItem;
-import pl.dlusk.domain.OrderItem;
-import pl.dlusk.domain.Review;
+import pl.dlusk.domain.*;
 import pl.dlusk.domain.exception.ResourceNotFoundException;
-import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
-import pl.dlusk.infrastructure.database.entity.ReviewEntity;
-import pl.dlusk.infrastructure.database.repository.jpa.FoodOrderJpaRepository;
-import pl.dlusk.infrastructure.database.repository.jpa.ReviewJpaRepository;
-import pl.dlusk.infrastructure.database.repository.mapper.FoodOrderEntityMapper;
-import pl.dlusk.infrastructure.database.repository.mapper.ReviewEntityMapper;
+import pl.dlusk.infrastructure.database.entity.*;
+import pl.dlusk.infrastructure.database.repository.jpa.*;
+import pl.dlusk.infrastructure.database.repository.mapper.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,19 +24,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 public class FoodOrderRepositoryTest {
-    @Mock
-    private FoodOrderJpaRepository foodOrderJpaRepository;
+    @Mock private FoodOrderJpaRepository foodOrderJpaRepository;
+    @Mock private FoodOrderEntityMapper foodOrderEntityMapper;
+    @Mock private ReviewJpaRepository reviewJpaRepository;
+    @Mock private ReviewEntityMapper reviewEntityMapper;
+    @Mock private ClientEntityMapper clientEntityMapper;
+    @Mock private RestaurantEntityMapper restaurantEntityMapper;
+    @Mock private DeliveryJpaRepository deliveryJpaRepository;
+    @Mock private DeliveryEntityMapper deliveryEntityMapper;
+    @Mock private PaymentEntityMapper paymentEntityMapper;
+    @Mock private PaymentJpaRepository paymentJpaRepository;
+    @Mock private OrderItemEntityMapper orderItemEntityMapper;
+    @Mock private OrderItemsJpaRepository orderItemsJpaRepository;
+    @Mock private MenuItemEntityMapper menuItemEntityMapper;
 
-    @Mock
-    private FoodOrderEntityMapper foodOrderEntityMapper;
-    @Mock
-    private ReviewEntityMapper reviewEntityMapper;
-
-    @Mock
-    private ReviewJpaRepository reviewJpaRepository;
 
     @InjectMocks
     private FoodOrderRepository foodOrderRepository;
@@ -48,6 +48,10 @@ public class FoodOrderRepositoryTest {
     private FoodOrder foodOrder;
     private FoodOrderEntity foodOrderEntity;
     private OrderItem orderItem;
+    private Client client;
+    private Restaurant restaurant;
+    private Delivery delivery;
+    private Payment payment;
 
     @BeforeEach
     void setUp() {
@@ -73,18 +77,22 @@ public class FoodOrderRepositoryTest {
         // Ustawienie Set<OrderItem> dla FoodOrder
         Set<OrderItem> orderItems = Set.of(orderItem);
 
+        client = Mockito.mock(Client.class);
+        restaurant = Mockito.mock(Restaurant.class);
+        delivery = Mockito.mock(Delivery.class);
+        payment = Mockito.mock(Payment.class);
+
         // Inicjalizacja FoodOrder
         foodOrder = FoodOrder.builder()
                 .foodOrderId(1L)
                 .orderTime(LocalDateTime.now())
-                .foodOrderStatus("Przygotowany")
-                .totalPrice(new BigDecimal("48.00")) // Przykładowa wartość, może wymagać dostosowania
-                .client(null) // Przypisz obiekt Client, jeśli dostępny
-                .restaurant(null) // Przypisz obiekt Restaurant, jeśli dostępny
-                .orderItems(orderItems)
-                .review(null) // Przypisz obiekt Review, jeśli dostępny
-                .delivery(null) // Przypisz obiekt Delivery, jeśli dostępny
-                .payment(null) // Przypisz obiekt Payment, jeśli dostępny
+                .foodOrderStatus(FoodOrderStatus.CONFIRMED.toString())
+                .totalPrice(new BigDecimal("100.00"))
+                .client(client)
+                .restaurant(restaurant)
+                .orderItems(Set.of(orderItem))
+                .delivery(delivery)
+                .payment(payment)
                 .build();
 
         // Ustawienie powiązania zwrotnego z OrderItem do FoodOrder
@@ -96,35 +104,55 @@ public class FoodOrderRepositoryTest {
         foodOrderEntity.setStatus(foodOrder.getFoodOrderStatus());
         foodOrderEntity.setTotalPrice(foodOrder.getTotalPrice());
         foodOrderEntity.setOrderTime(foodOrder.getOrderTime());
+        foodOrderEntity.setClientEntity(new ClientEntity());
+        foodOrderEntity.setRestaurantEntity(new RestaurantEntity());
         // Uzupełnij pozostałe pola encji FoodOrderEntity, jeśli to konieczne
+
     }
 
 
     @Test
-    void saveShouldPersistFoodOrder() {
-        // Przygotowanie danych wejściowych
-        foodOrder = FoodOrder.builder()
-                .foodOrderId(1L)
-                .orderTime(LocalDateTime.now())
-                .foodOrderStatus("Przygotowany")
-                .totalPrice(new BigDecimal("100.00"))
-                // Uzupełnij pozostałe pola według potrzeb
-                .build();
+    void saveShouldPersistFoodOrderWithAllAssociations() {
+        // Arrange
+        FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
+        DeliveryEntity deliveryEntity = new DeliveryEntity();
+        PaymentEntity paymentEntity = new PaymentEntity();
+        OrderItemEntity orderItemEntity = new OrderItemEntity();
 
-        when(foodOrderEntityMapper.mapToEntity(any(FoodOrder.class))).thenReturn(foodOrderEntity);
-        when(foodOrderJpaRepository.save(any(FoodOrderEntity.class))).thenReturn(foodOrderEntity);
-        when(foodOrderEntityMapper.mapFromEntity(any(FoodOrderEntity.class))).thenReturn(foodOrder);
+        when(foodOrderEntityMapper.mapToEntity(foodOrder)).thenReturn(foodOrderEntity);
+        when(foodOrderJpaRepository.save(foodOrderEntity)).thenReturn(foodOrderEntity);
+        when(foodOrderEntityMapper.mapFromEntity(foodOrderEntity)).thenReturn(foodOrder);
 
-        // Akcja
-        FoodOrder savedFoodOrder = foodOrderRepository.save(foodOrder);
+        when(clientEntityMapper.mapToEntity(client)).thenReturn(new ClientEntity());
+        when(restaurantEntityMapper.mapToEntity(restaurant)).thenReturn(new RestaurantEntity());
 
-        // Weryfikacja
-        assertThat(savedFoodOrder).isNotNull();
-        assertThat(savedFoodOrder.getFoodOrderId()).isEqualTo(foodOrder.getFoodOrderId());
-        assertThat(savedFoodOrder.getOrderTime()).isEqualTo(foodOrder.getOrderTime());
-        assertThat(savedFoodOrder.getFoodOrderStatus()).isEqualTo(foodOrder.getFoodOrderStatus());
-        assertThat(savedFoodOrder.getTotalPrice()).isEqualTo(foodOrder.getTotalPrice());
-        // Weryfikuj pozostałe pola
+        when(deliveryEntityMapper.mapToEntity(delivery)).thenReturn(deliveryEntity);
+        when(paymentEntityMapper.mapToEntity(payment)).thenReturn(paymentEntity);
+
+        when(orderItemEntityMapper.mapToEntity(orderItem)).thenReturn(orderItemEntity);
+        when(menuItemEntityMapper.mapToEntity(orderItem.getMenuItem())).thenReturn(new MenuItemEntity());
+
+        // Act
+        FoodOrder result = foodOrderRepository.save(foodOrder);
+
+        // Assert
+        verify(foodOrderEntityMapper).mapToEntity(foodOrder);
+        verify(foodOrderJpaRepository).save(foodOrderEntity);
+        verify(foodOrderEntityMapper).mapFromEntity(foodOrderEntity);
+
+        verify(clientEntityMapper).mapToEntity(client);
+        verify(restaurantEntityMapper).mapToEntity(restaurant);
+
+        verify(deliveryEntityMapper).mapToEntity(delivery);
+        verify(deliveryJpaRepository).save(deliveryEntity);
+        verify(paymentEntityMapper).mapToEntity(payment);
+        verify(paymentJpaRepository).save(paymentEntity);
+
+        verify(orderItemEntityMapper).mapToEntity(orderItem);
+        verify(menuItemEntityMapper).mapToEntity(orderItem.getMenuItem());
+        verify(orderItemsJpaRepository).saveAll(any(Set.class));
+
+        assertThat(result).isEqualTo(foodOrder);
     }
 
     @Test

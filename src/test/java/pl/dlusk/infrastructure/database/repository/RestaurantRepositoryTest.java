@@ -6,12 +6,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import pl.dlusk.domain.*;
 import pl.dlusk.infrastructure.database.entity.*;
 import pl.dlusk.infrastructure.database.repository.jpa.*;
-import pl.dlusk.infrastructure.database.repository.mapper.MenuEntityMapper;
-import pl.dlusk.infrastructure.database.repository.mapper.RestaurantEntityMapper;
-import pl.dlusk.infrastructure.database.repository.mapper.ReviewEntityMapper;
+import pl.dlusk.infrastructure.database.repository.mapper.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,9 +35,13 @@ class RestaurantRepositoryTest {
     @Mock
     private ReviewEntityMapper reviewEntityMapper;
     @Mock
+    private RestaurantAddressEntityMapper restaurantAddressEntityMapper;
+    @Mock
     private ReviewJpaRepository reviewJpaRepository;
     @Mock
     private MenuEntityMapper menuEntityMapper;
+    @Mock
+    private OwnerEntityMapper ownerEntityMapper;
     @Mock
     private RestaurantDeliveryAreaJpaRepository restaurantDeliveryAreaJpaRepository;
 
@@ -52,6 +58,7 @@ class RestaurantRepositoryTest {
 
     @BeforeEach
     void setUp() {
+
         restaurantEntity = new RestaurantEntity();
         restaurantEntity.setId(1L);
         restaurantEntity.setName("Test Restaurant");
@@ -66,7 +73,7 @@ class RestaurantRepositoryTest {
 
     @Test
     void getRestaurantsByOwnerIdShouldReturnListOfRestaurants() {
-//
+
     }
 
     @Test
@@ -92,7 +99,6 @@ class RestaurantRepositoryTest {
 
     @Test
     void addRestaurantShouldPersistRestaurant() {
-        // Przygotowanie danych wejściowych z wykorzystaniem wzorca Builder
         RestaurantAddress address = RestaurantAddress.builder()
                 .restaurantAddressId(1L)
                 .city("Test City")
@@ -102,37 +108,24 @@ class RestaurantRepositoryTest {
 
         Owner owner = Owner.builder()
                 .ownerId(1L)
-                // Uzupełnij pozostałe pola właściciela zgodnie z potrzebami
                 .build();
 
-        // Utwórz prawidłowy obiekt Restaurant do użycia w teście
         Restaurant restaurantToSave = Restaurant.builder()
                 .name("Test Restaurant")
                 .address(address)
                 .owner(owner)
-                // Uzupełnij pozostałe pola zgodnie z potrzebami
                 .build();
 
-        // Konfiguracja zachowania mocków
-        when(ownerJpaRepository.findById(anyLong())).thenReturn(Optional.of(new OwnerEntity()));
-        when(restaurantAddressJpaRepository.findById(anyLong())).thenReturn(Optional.of(new RestaurantAddressEntity()));
+        when(restaurantAddressJpaRepository.findByCityPostalCodeAndAddress(address.getCity(), address.getPostalCode(), address.getAddress())).thenReturn(Optional.empty());
+        when(restaurantEntityMapper.mapToEntity(any(Restaurant.class))).thenReturn(new RestaurantEntity());
+        when(restaurantJpaRepository.save(any(RestaurantEntity.class))).thenReturn(new RestaurantEntity());
+        when(restaurantEntityMapper.mapFromEntity(any(RestaurantEntity.class))).thenReturn(restaurantToSave);
 
-        // Upewnij się, że mapToEntity zwraca prawidłowy obiekt RestaurantEntity, a nie null
-        when(restaurantEntityMapper.mapToEntity(restaurantToSave)).thenReturn(restaurantEntity);
-
-        // Upewnij się, że zwracany obiekt RestaurantEntity nie jest null
-        when(restaurantJpaRepository.save(restaurantEntity)).thenReturn(restaurantEntity);
-
-        // Upewnij się, że mapFromEntity zwraca poprawnie zainicjowany obiekt Restaurant, a nie null
-        when(restaurantEntityMapper.mapFromEntity(restaurantEntity)).thenReturn(restaurantToSave);
-
-        // Wywołanie metody testowanej
         Restaurant result = restaurantRepository.addRestaurant(restaurantToSave, address, owner);
 
-        // Weryfikacja wyników
-        assertThat(result).isNotNull();  // Upewnij się, że result nie jest null
+        assertThat(result).isNotNull();
         assertThat(result).isEqualToComparingFieldByField(restaurantToSave);
-        verify(restaurantJpaRepository).save(restaurantEntity);
+        verify(restaurantJpaRepository).save(any(RestaurantEntity.class));
     }
 
 
@@ -166,84 +159,95 @@ class RestaurantRepositoryTest {
 
     @Test
     void getMenuRestaurantByIdShouldReturnMenu() {
-        // Inicjalizacja MenuEntity, załóżmy, że jest ona odpowiednio skonfigurowana
+
         MenuEntity menuEntity = new MenuEntity();
         menuEntity.setId(1L);
-        // Ustawienie dodatkowych pól menuEntity w razie potrzeby
 
-        // Przygotowanie oczekiwanego obiektu Menu z wykorzystaniem wzorca Builder
+
+
         Menu expectedMenu = Menu.builder()
                 .menuId(1L)
                 .name("Test Menu")
                 .description("Test description of the menu")
-                // Ustawienie dodatkowych pól Menu w razie potrzeby, np. restaurant, menuItems
+
                 .build();
 
-        // Konfiguracja zachowania mocków
+
         when(menuJpaRepository.findByRestaurantId(anyLong())).thenReturn(menuEntity);
         when(menuEntityMapper.mapFromEntity(menuEntity)).thenReturn(expectedMenu);
 
-        // Wywołanie metody testowanej
+
         Menu result = restaurantRepository.findMenuRestaurantById(1L);
 
-        // Weryfikacja wyników
+
         assertThat(result).isNotNull().isEqualToComparingFieldByField(expectedMenu);
         verify(menuJpaRepository).findByRestaurantId(1L);
     }
 
 
-//    @Test
-//    void getRestaurantsDeliveringToAreaShouldReturnRestaurants() {
-//        // Utworzenie mocka RestaurantEntity do użycia w RestaurantDeliveryAreaEntity
-//        RestaurantEntity mockRestaurantEntity = new RestaurantEntity();
-//        mockRestaurantEntity.setId(1L); // Ustawienie ID dla mocka RestaurantEntity
-//        // ... Ustaw pozostałe wymagane pola dla RestaurantEntity
-//
-//        // Utworzenie RestaurantDeliveryAreaEntity z mockRestaurantEntity
-//        RestaurantDeliveryAreaEntity deliveryAreaEntity = new RestaurantDeliveryAreaEntity();
-//        deliveryAreaEntity.setRestaurantEntity(mockRestaurantEntity); // Ustawienie RestaurantEntity
-//
-//        List<RestaurantEntity> restaurantEntities = List.of(restaurantEntity);
-//        when(restaurantDeliveryAreaJpaRepository.findByStreetName(anyString())).thenReturn(List.of(deliveryAreaEntity)); // Używanie zainicjalizowanego deliveryAreaEntity
-//        when(restaurantJpaRepository.findAllById(anySet())).thenReturn(restaurantEntities);
-//        when(restaurantEntityMapper.mapFromEntity(any(RestaurantEntity.class))).thenReturn(restaurant);
-//
-//        List<Restaurant> result = restaurantRepository.findRestaurantsDeliveringToArea("Test Street", null);
-//
-//        assertThat(result).hasSize(1);
-//        assertThat(result.get(0)).isEqualToComparingFieldByField(restaurant);
-//    }
+    @Test
+    void getRestaurantsDeliveringToAreaShouldReturnRestaurants() {
+        // Setup test data
+        RestaurantEntity mockRestaurantEntity = new RestaurantEntity();
+        mockRestaurantEntity.setId(1L);
+
+        RestaurantDeliveryAreaEntity deliveryAreaEntity = new RestaurantDeliveryAreaEntity();
+        deliveryAreaEntity.setRestaurantEntity(mockRestaurantEntity);
+
+        // Create a Pageable object (typically needed for real calls)
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // Setup the Page object to return
+        Page<RestaurantDeliveryAreaEntity> deliveryAreasPage = new PageImpl<>(List.of(deliveryAreaEntity), pageable, 1);
+
+        // Mock the repository responses
+        when(restaurantDeliveryAreaJpaRepository.findByStreetName(eq("Test Street"), any(Pageable.class)))
+                .thenReturn(deliveryAreasPage);
+
+        List<RestaurantEntity> restaurantEntities = List.of(mockRestaurantEntity);
+        when(restaurantJpaRepository.findAllById(anySet())).thenReturn(restaurantEntities);
+        when(restaurantEntityMapper.mapFromEntity(any(RestaurantEntity.class))).thenReturn(restaurant);
+
+        // Execute the method under test
+        Page<Restaurant> result = restaurantRepository.findRestaurantsDeliveringToArea("Test Street", pageable);
+
+        // Assert the results
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1); // Check the number of elements
+        assertThat(result.getContent()).hasSize(1); // Check the size of the content list
+        assertThat(result.getContent().get(0)).isEqualToComparingFieldByField(restaurant);
+    }
 
 
     @Test
     void getReviewsByRestaurantIdShouldReturnReviews() {
-        // Przygotowanie listy encji ReviewEntity, załóżmy, że są one odpowiednio skonfigurowane
+
         ReviewEntity reviewEntity = new ReviewEntity();
         reviewEntity.setId(1L);
         reviewEntity.setRating(5);
         reviewEntity.setComment("Excellent");
         reviewEntity.setReviewDate(LocalDateTime.now());
-        // Ustawienie dodatkowych pól reviewEntity w razie potrzeby, np. foodOrderEntity
+
 
         List<ReviewEntity> reviewEntities = List.of(reviewEntity);
 
-        // Przygotowanie oczekiwanego obiektu Review z wykorzystaniem wzorca Builder
+
         Review expectedReview = Review.builder()
                 .reviewId(1L)
                 .rating(5)
                 .comment("Excellent")
                 .reviewDate(reviewEntity.getReviewDate())
-                // Ustawienie dodatkowych pól Review w razie potrzeby, np. foodOrder
+
                 .build();
 
-        // Konfiguracja zachowania mocków
+
         when(reviewJpaRepository.findByRestaurantId(anyLong())).thenReturn(reviewEntities);
         when(reviewEntityMapper.mapFromEntity(reviewEntity)).thenReturn(expectedReview);
 
-        // Wywołanie metody testowanej
+
         List<Review> result = restaurantRepository.findReviewsByRestaurantId(1L);
 
-        // Weryfikacja wyników
+
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualToComparingFieldByField(expectedReview);
         verify(reviewJpaRepository).findByRestaurantId(1L);

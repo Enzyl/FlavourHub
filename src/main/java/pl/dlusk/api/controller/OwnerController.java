@@ -3,24 +3,24 @@ package pl.dlusk.api.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.OwnerService;
 import pl.dlusk.business.RestaurantService;
-import pl.dlusk.business.dao.FoodOrderDAO;
-import pl.dlusk.business.dao.OwnerDAO;
-import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 
@@ -30,11 +30,7 @@ import java.util.Set;
 public class OwnerController {
     private final OwnerService ownerService;
     private final RestaurantService restaurantService;
-    private final RestaurantDAO restaurantDAO;
     private final FoodOrderService foodOrderService;
-    private final FoodOrderDAO foodOrderDAO;
-    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
-    private final OwnerDAO ownerDAO;
 
 
     @PostMapping("/registerOwner")
@@ -48,101 +44,105 @@ public class OwnerController {
                                 @RequestParam("user.password") String password,
                                 @RequestParam("user.enabled") boolean enabled,
                                 HttpSession session,
-                                Model model) {
-        log.info("########## ClientController #### registerClient #  START");
-        FoodOrderingAppUser user = FoodOrderingAppUser.builder()
-                .username(username)
-                .password(password)
-                .email(email)
-                .role(Roles.OWNER.toString())
-                .enabled(enabled)
-                .build();
+                                RedirectAttributes redirectAttributes) {
+        Owner owner = createOwner(name, surname, phoneNumber, nip, regon, username, password, email, enabled);
+        session.setAttribute("owner", owner);
 
-        Owner owner = Owner.builder()
-                .name(name)
-                .surname(surname)
-                .regon(regon)
-                .nip(nip)
-                .phoneNumber(phoneNumber)
-                .user(user)
-                .build();
-        session.setAttribute("owner",owner);
         try {
             ownerService.registerOwner(owner, owner.getUser());
-            log.info("########## OwnerController #### OWNERSAVED WITH:  #  USERNAME {} AND PASSWORD {}", username,password);
         } catch (UsernameAlreadyExistsException e) {
-            model.addAttribute("errorMessage", "Nazwa użytkownika lub NIP właściciela już istnieje.");
-            return "registrationSuccessView";
+            redirectAttributes.addFlashAttribute("errorMessage", "Nazwa użytkownika lub NIP właściciela już istnieje.");
+            return "redirect:/registration";
         }
 
         return "redirect:/showOwnerLoggedInView";
     }
 
     @GetMapping("/showOwnerLoggedInView")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
     public String showOwnerLoggedInView(HttpSession session, Model model) {
-
         String username = (String) session.getAttribute("username");
-        log.info("########## OwnerController #### showOwnerLoggedInView #  username   " + username);
+        if (username == null) {
+            log.info("Session expired or user not logged in.");
+            return "redirect:/login";
+        }
 
-        FoodOrderingAppUser user = foodOrderingAppUserRepository.findByUsername(username);
+        FoodOrderingAppUser user = ownerService.getUserByUsername(username);
+        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
+
         session.setAttribute("user", user);
-        Restaurant restaurantByUsername = restaurantService.getRestaurantByUsername(username);
-        log.info("########## OwnerController #### showOwnerLoggedInView #  restaurantByUsername   " + restaurantByUsername);
+        session.setAttribute("restaurant", restaurant);
 
-        Owner owner = ownerDAO.findByUsername(username);
-        log.info("########## OwnerController #### showOwnerLoggedInView #  owner   " + owner);
-
-        if (restaurantByUsername == null) {
-            log.info("########## OwnerController #### showOwnerLoggedInView #  restaurantByUsername   " + restaurantByUsername);
+        if (restaurant == null) {
+            log.info("Restaurant not found for username: {}", username);
             return "redirect:/showRestaurantRegistrationForm";
         }
-        Menu menu = restaurantService.getMenuByRestaurantId(restaurantByUsername.getRestaurantId());
 
-        if (menu == null){
+        Menu menu = restaurantService.getMenuByRestaurant(restaurant);
+        if (menu == null) {
+            log.info("No menu found for restaurant ID: {}", restaurant.getRestaurantId());
             return "redirect:/showAddMenuToTheRestaurantView";
         }
 
-        Set<MenuItem> menuItemsByMenuId = restaurantDAO.findMenuItemsByMenuId(menu.getMenuId());
-
-        if (menuItemsByMenuId.isEmpty()){
+        Set<MenuItem> menuItems = restaurantService.getMenuItemsByMenuId(menu.getMenuId());
+        if (menuItems.isEmpty()) {
+            log.info("No menu items found for menu ID: {}", menu.getMenuId());
             return "redirect:/addItemsToTheMenuView";
         }
-        menu = menu.withMenuItems(menuItemsByMenuId);
 
-        model.addAttribute("menu", menu);
-        model.addAttribute("restaurant", restaurantByUsername);
+        model.addAttribute("menu", menu.withMenuItems(menuItems));
+        model.addAttribute("restaurant", restaurant);
         model.addAttribute("ownerUsername", username);
-        session.setAttribute("restaurant", restaurantByUsername);
-        log.info("########## OwnerController #### showOwnerLoggedInView #  FINISHED");
 
+        log.info("Owner logged in view displayed for {}", username);
         return "ownerRestaurantInfo";
     }
 
+
+
+    @PostMapping("/updateFoodOrderStatusToDelivery/{orderId}")
+    public String updateFoodOrderStatusToDelivery(@PathVariable Long orderId, HttpSession session) {
+        foodOrderService.updateFoodOrderStatus(orderId, FoodOrderStatus.DELIVERED.toString());
+        log.info("Order with id {} status updated to Delivery.", orderId);
+        return "redirect:/showOrdersInProgress";
+    }
+    @GetMapping("/showFinishedOrders")
+    public String showFinishedOrders(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        SecurityContext context = SecurityContextHolder.getContext();
+
+        log.info("Fetching restaurant for user {}", username);
+        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
+
+        if (restaurant == null) {
+            log.warn("No restaurant found for username: {}", username);
+            return "redirect:/showRestaurantRegistrationForm";
+        }
+
+        List<FoodOrder> finishedFoodOrders = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId()
+        ,FoodOrderStatus.DELIVERED.toString());
+        model.addAttribute("finishedFoodOrders", finishedFoodOrders);
+
+        log.debug("Finished orders for restaurant ID {}: {}", restaurant.getRestaurantId(), finishedFoodOrders.size());
+        return "finishedOrdersView";
+    }
+
     @GetMapping("/showOrdersInProgress")
-    public String showOrdersInProgress(HttpSession session, Model model) {
-        log.info("########## OwnerController #### showOrdersInProgress #  START");
-        String username = (String) session.getAttribute("username");
-        Restaurant restaurantByUsername = restaurantService.getRestaurantByUsername(username);
-        Long restaurantId = restaurantByUsername.getRestaurantId();
+    public String showOrdersInProgress(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
 
-        log.info("########## OwnerController #### showOrdersInProgress # restaurantId {}", restaurantId);
-        List<FoodOrder> foodOrdersForRestaurant = foodOrderService.getFoodOrdersByRestaurant(restaurantId);
+        log.debug("Fetching restaurant for user {}", username);
+        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
+        if (restaurant == null) {
+            log.warn("No restaurant found for username: {}", username);
+            return "redirect:/showRestaurantRegistrationForm";
+        }
 
-        log.info("########## OwnerController #### showOrdersInProgress # foodOrdersForRestaurant {}",
-                foodOrdersForRestaurant);
+        List<FoodOrder> foodOrdersInProgress = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId(), FoodOrderStatus.CONFIRMED.toString());
 
-        List<FoodOrder> foodOrdersInProgress = foodOrdersForRestaurant
-                .stream().filter(a -> a.getFoodOrderStatus().equals(FoodOrderStatus.CONFIRMED.toString())).toList();
-        Restaurant restaurant = restaurantDAO.findRestaurantById(restaurantId);
-
-        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrdersInProgress.stream().map(
-                foodOrder -> {
-                    Long foodOrderId = foodOrder.getFoodOrderId();
-                    Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
-                    return foodOrder.withOrderItems(orderItemsByFoodOrderId)
-                            .withRestaurant(restaurant);
-                }
-        ).toList();
+        List<FoodOrder> fooOrdersInProgressWithRestaurant = getFoodOrders(foodOrdersInProgress, restaurant);
 
         model.addAttribute("foodOrdersInProgress", fooOrdersInProgressWithRestaurant);
         log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH foodOrdersInProgress {}",
@@ -150,41 +150,41 @@ public class OwnerController {
         return "foodOrdersForRestaurantInProgressView";
     }
 
-    @PostMapping("/updateFoodOrderStatusToDelivery/{orderId}")
-    public String updateFoodOrderStatusToDelivery(@PathVariable Long orderId, HttpSession session) {
-        foodOrderService.updateFoodOrderStatus(orderId, "Delivery");
-        log.info("Order with id {} status updated to Delivery.", orderId);
-        return "redirect:/showOrdersInProgress";
-    }
-
-    @GetMapping("/showFinishedOrders")
-    public String showFinishedOrders(HttpSession session, Model model) {
-        log.info("########## OwnerController #### showFinishedOrders #  START");
-        String username = (String) session.getAttribute("username");
-        Restaurant restaurantByUsername = restaurantService.getRestaurantByUsername(username);
-        Long restaurantId = restaurantByUsername.getRestaurantId();
-
-        log.info("########## OwnerController #### showFinishedOrders #  FINISH WITH restaurantId {}", restaurantId);
-        List<FoodOrder> foodOrdersForRestaurant = foodOrderService.getFoodOrdersByRestaurant(restaurantId);
-
-        log.info("########## OwnerController #### showFinishedOrders #  FINISH WITH foodOrdersForRestaurant {}",
-                foodOrdersForRestaurant);
-
-        List<FoodOrder> finishedFoodOrders = foodOrdersForRestaurant
-                .stream().filter(a -> a.getFoodOrderStatus().equals("DELIVERED")).toList();
-
-        List<FoodOrder> fooOrdersInProgressWithRestaurant = finishedFoodOrders.stream().map(
+    private List<FoodOrder> getFoodOrders(List<FoodOrder> foodOrdersInProgress, Restaurant restaurant) {
+        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrdersInProgress.stream().map(
                 foodOrder -> {
                     Long foodOrderId = foodOrder.getFoodOrderId();
-                    Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
+                    Set<OrderItem> orderItemsByFoodOrderId = foodOrderService.findOrderItemsByFoodOrderId(foodOrderId);
                     return foodOrder.withOrderItems(orderItemsByFoodOrderId)
-                            .withRestaurant(restaurantByUsername);
+                            .withRestaurant(restaurant);
                 }
         ).toList();
-        model.addAttribute("fooOrdersInProgressWithRestaurant", fooOrdersInProgressWithRestaurant);
-        log.info("########## OwnerController #### showFinishedOrders #  FINISH WITH finishedFoodOrders {}",
-                fooOrdersInProgressWithRestaurant);
-        return "finishedOrders";
+        return fooOrdersInProgressWithRestaurant;
     }
 
+
+    private Owner createOwner(String name, String surname, String phoneNumber, String nip, String regon,
+                              String username, String password, String email, boolean enabled) {
+
+        FoodOrderingAppUser user = createUser(username, password, email, enabled);
+
+        return Owner.builder()
+                .name(name)
+                .surname(surname)
+                .phoneNumber(phoneNumber)
+                .nip(nip)
+                .regon(regon)
+                .user(user)
+                .build();
+    }
+
+    private FoodOrderingAppUser createUser(String username, String password, String email, boolean enabled) {
+        return FoodOrderingAppUser.builder()
+                .username(username)
+                .password(password)
+                .email(email)
+                .role(Roles.OWNER.toString())
+                .enabled(enabled)
+                .build();
+    }
 }

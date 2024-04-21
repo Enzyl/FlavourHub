@@ -11,6 +11,7 @@ import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
+import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,7 @@ public class OwnerService {
     private final OwnerDAO ownerDAO;
     private final RestaurantDAO restaurantDAO;
     private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
+    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
 
     public List<Owner> getAllOwners() {
         return ownerDAO.findAll();
@@ -96,5 +98,10 @@ public class OwnerService {
         return restaurantsByOwnerId;
     }
 
+
+    public FoodOrderingAppUser getUserByUsername(String username) {
+        FoodOrderingAppUser userByUsername = foodOrderingAppUserRepository.findByUsername(username);
+        return userByUsername;
+    }
 
 }

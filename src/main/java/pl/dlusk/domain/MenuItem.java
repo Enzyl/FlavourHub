@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = {"menuItemId", "name","description","category","price"})
-@ToString(of = {"menuItemId", "name", "category","description","price"})
+@EqualsAndHashCode(of = {"menuItemId", "name","description","category","price","imagePath"})
+@ToString(of = {"menuItemId", "name", "category","description","price","imagePath"})
 public class MenuItem {
     Long menuItemId;
     String name;

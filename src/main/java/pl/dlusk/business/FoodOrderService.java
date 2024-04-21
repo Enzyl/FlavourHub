@@ -1,5 +1,6 @@
 package pl.dlusk.business;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.exception.ResourceNotFoundException;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
+import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -97,7 +100,7 @@ public class FoodOrderService {
         String uniqueOrderNumber = UUID.randomUUID().toString();
         FoodOrder foodOrder = FoodOrder.builder()
                 .orderTime(paymentTime)
-                .foodOrderStatus("Confirmed")
+                .foodOrderStatus(FoodOrderStatus.CONFIRMED.toString())
                 .totalPrice(totalValue)
                 .orderNumber(uniqueOrderNumber)
                 .build()
@@ -114,11 +117,6 @@ public class FoodOrderService {
     @Transactional
     public void updateFoodOrderStatus(Long orderId, String status) {
         log.info("########## FoodOrderService #### cancelOrder # START");
-
-        FoodOrder foodOrder = foodOrderDAO.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-
-
 
         // Aktualizacja statusu zamówienia na "Cancelled"
         foodOrderDAO.updateFoodOrderStatus(orderId, status);
@@ -142,4 +140,50 @@ public class FoodOrderService {
         FoodOrder foodOrderWithOrderItems = foodOrderByOrderNumber.withOrderItems(orderItemsByFoodOrderId);
         return foodOrderWithOrderItems;
     }
+    public Set<OrderItem> findOrderItemsByFoodOrderId(Long foodOrderId){
+        Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
+        return orderItemsByFoodOrderId;
+    }
+
+    public List<FoodOrder> getFoodOrdersWithStatus(Long restaurantId, String status) {
+        List<FoodOrder> foodOrdersForRestaurant = foodOrderDAO.findByRestaurantId(restaurantId);
+        return foodOrdersForRestaurant.stream()
+                .filter(order -> status.equals(order.getFoodOrderStatus()))
+                .map(this::enrichFoodOrderWithDetails)
+                .collect(Collectors.toList());
+    }
+
+    private FoodOrder enrichFoodOrderWithDetails(FoodOrder foodOrder) {
+        Set<OrderItem> orderItems = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrder.getFoodOrderId());
+        return foodOrder.withOrderItems(orderItems);
+    }
+
+
+    @Transactional
+    public String processOrder(HttpSession session) {
+        ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
+        Long restaurantId = (Long) session.getAttribute("restaurantId");
+        FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
+        BigDecimal totalValue = (BigDecimal) session.getAttribute("totalValue");
+        Delivery delivery = (Delivery) session.getAttribute("delivery");
+        Payment payment = (Payment) session.getAttribute("payment");
+
+        String uniqueFoodNumber = createFoodOrder(restaurantId, user.getUsername(), totalValue, delivery, payment, shoppingCart);
+
+        clearOrderSessionAttributes(session, uniqueFoodNumber);
+
+        return uniqueFoodNumber;
+    }
+
+    private void clearOrderSessionAttributes(HttpSession session, String uniqueFoodNumber) {
+        session.removeAttribute("delivery");
+        session.removeAttribute("shoppingCart");
+        session.removeAttribute("payment");
+        session.removeAttribute("totalValue");
+        session.removeAttribute("restaurantId");
+        session.removeAttribute("location");
+        session.removeAttribute("uniqueFoodNumber");
+        session.setAttribute("uniqueFoodNumber", uniqueFoodNumber);
+    }
+
 }

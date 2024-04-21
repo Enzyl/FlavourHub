@@ -35,7 +35,7 @@
     <!-- Ukryty formularz -->
     <div class="hidden-form" id="addMenuItemForm">
         <h4>Dodaj nowe danie do menu</h4>
-        <form th:action="@{/addMenuItemToMenu}" method="post">
+        <form th:action="@{/addMenuItemToMenu}" method="post" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="itemName">Nazwa dania:</label>
                 <input type="text" id="itemName" name="name" class="form-control" required>
@@ -51,6 +51,10 @@
             <div class="form-group">
                 <label for="itemPrice">Cena dania:</label>
                 <input type="number" step="0.01" id="itemPrice" name="price" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="itemImage">Obrazek dania:</label>
+                <input type="file" id="itemImage" name="image" class="form-control">
             </div>
             <button type="submit" class="btn btn-success">Dodaj</button>
         </form>

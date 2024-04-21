@@ -1,23 +1,24 @@
 package pl.dlusk.api.controller;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import pl.dlusk.api.dto.DeliveryStreetDTO;
+import pl.dlusk.api.dto.MenuDTO;
+import pl.dlusk.api.dto.RestaurantRegistrationDTO;
 import pl.dlusk.business.CloudinaryService;
 import pl.dlusk.business.RestaurantService;
 import pl.dlusk.business.dao.OwnerDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import pl.dlusk.infrastructure.database.repository.jpa.MenuJpaRepository;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
 
@@ -38,65 +39,37 @@ public class RestaurantController {
 
     @GetMapping("/restaurantMenu/{restaurantId}")
     public String showRestaurantMenu(@PathVariable Long restaurantId, Model model, HttpSession session) {
-        log.info("########## RestaurantController ##### showRestaurantMenu #### restaurantId: " + restaurantId);
-
+        log.info("Displaying menu for restaurant ID: {}", restaurantId);
         String username = (String) session.getAttribute("username");
+        ShoppingCart shoppingCart = ensureShoppingCart(session, restaurantId, username);
 
         try {
-            ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
-
-
-            if (shoppingCart == null || !shoppingCart.getRestaurantId().equals(restaurantId)) {
-                Long idByUsername = foodOrderingAppUserRepository.findIdByUsername(username);
-
-                shoppingCart = ShoppingCart.builder()
-                        .userId(idByUsername)
-                        .restaurantId(restaurantId)
-                        .build();
-                ShoppingCart shoppingCartWithRestaurantId = shoppingCart.withRestaurantId(restaurantId);
-                session.setAttribute("shoppingCart", shoppingCartWithRestaurantId);
-            }
-
-            Menu menu = restaurantDAO.findMenuRestaurantById(restaurantId);
-            log.info("########## RestaurantController ##### showRestaurantMenu # menu : " + menu.toString());
-            Set<MenuItem> menuItemsByMenuId = restaurantDAO.findMenuItemsByMenuId(menu.getMenuId());
-            menu = menu.withMenuItems(menuItemsByMenuId);
-            if (menu != null && menu.getMenuItems() == null) {
-                menu = menu.withMenuItems(new HashSet<>());
-            }
-
-            BigDecimal totalValue = shoppingCart.getItems().entrySet().stream()
-                    .map(entry -> entry.getKey().getPrice().multiply(new BigDecimal(entry.getValue())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            model.addAttribute("totalValue", totalValue);
-            session.setAttribute("totalValue", totalValue);
-
-
-            model.addAttribute("menu", menu);
-            model.addAttribute("restaurantId", restaurantId);
-            model.addAttribute("shoppingCart", shoppingCart);
-
-            session.setAttribute("restaurantId", restaurantId);
+            Menu menu = getMenuForRestaurant(restaurantId);
+            updateModelWithMenuDetails(model, shoppingCart, restaurantId, menu, session);
             return "restaurantMenu";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Menu dla restauracji o ID " + restaurantId + " nie zostało znalezione.");
+            log.error("Failed to load menu for restaurant ID {}: {}", restaurantId, e.getMessage());
+            model.addAttribute("errorMessage", "Menu for restaurant ID " + restaurantId + " could not be found.");
             return "errorPage";
         }
     }
 
     @PostMapping("/addToCart")
     public String addToCart(@RequestParam("menuItemId") Long menuItemId, HttpSession session, RedirectAttributes redirectAttributes) {
-        ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
+        ShoppingCart shoppingCart = getOrCreateShoppingCart(session);
+        try {
+            MenuItem menuItem = restaurantService.getMenuItemById(menuItemId);
+            shoppingCart.addItem(menuItem);
+            session.setAttribute("shoppingCart", shoppingCart);
+            redirectAttributes.addFlashAttribute("successMessage", "Item added to cart successfully.");
+        } catch (Exception e) {
+            log.error("Error adding item to cart: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to add item to cart.");
+        }
 
-        MenuItem menuItemById = restaurantDAO.findMenuItemById(menuItemId);
-        shoppingCart.addItem(menuItemById);
-        session.setAttribute("shoppingCart", shoppingCart);
-
-        Long restaurantId = shoppingCart.getRestaurantId();
-        redirectAttributes.addFlashAttribute("shoppingCart", shoppingCart);
-
-        return "redirect:/restaurantMenu/" + restaurantId;
+        return "redirect:/restaurantMenu/" + shoppingCart.getRestaurantId();
     }
+
 
     @PostMapping("/updateCartItem")
     public String updateCartItem(@RequestParam("menuItemId") Long menuItemId, @RequestParam("quantity") int quantity, HttpSession session) {
@@ -115,173 +88,188 @@ public class RestaurantController {
 
     @GetMapping("/showRestaurantRegistrationForm")
     public String showRegisterRestaurantForm(Model model) {
-        log.info("########## RestaurantController ##### showRegisterRestaurantForm # START");
-        Restaurant restaurant = Restaurant.builder()
-                .address(RestaurantAddress.builder()
-                        .address("")
-                        .city("")
-                        .postalCode("")
-                        .build())
-                .owner(null)
-                .name("")
-                .imagePath("")
-                .description("")
-                .build();
-        model.addAttribute("restaurant", restaurant);
-
+        RestaurantRegistrationDTO restaurantDTO = new RestaurantRegistrationDTO();
+        restaurantDTO.setAddress(new RestaurantRegistrationDTO.AddressDTO()); // Ustawienie pustych domyślnych wartości
+        model.addAttribute("restaurant", restaurantDTO);
         return "restaurantRegistrationView";
     }
 
+
+
     @PostMapping("/registerRestaurant")
     public String registerRestaurant(
-            @RequestParam("name") String name,
-            @RequestParam("description") String description,
-            @RequestParam("address.city") String city,
-            @RequestParam("address.postalCode") String postalCode,
-            @RequestParam("address.address") String address,
+            @Valid @ModelAttribute("restaurant") RestaurantRegistrationDTO restaurantDTO,
+            BindingResult result,
             HttpSession session,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            @RequestParam("image") MultipartFile image,
+            Model model) throws IOException {
 
-        log.info("########## RestaurantController ##### registerRestaurant # START");
+        if (result.hasErrors()) {
+            logErrors(result);
+            model.addAttribute("restaurant", restaurantDTO);
+            return "restaurantRegistrationView";  // Return to the form on errors
+        }
 
-        RestaurantAddress restaurantAddress = RestaurantAddress.builder()
-                .city(city)
-                .postalCode(postalCode)
-                .address(address)
-                .build();
+        String imageUrl = uploadImageAndRetrieveUrl(image);
+        Owner owner = getAuthenticatedOwner(session);
+        Restaurant restaurant = createRestaurant(restaurantDTO, imageUrl, owner);
 
-        log.info("Registering restaurant with name: {}", name);
+        Restaurant savedRestaurant = restaurantDAO.addRestaurant(restaurant, restaurant.getAddress(), owner);
+        log.info("Restaurant registered: {}", savedRestaurant.getName());
+
+        redirectAttributes.addFlashAttribute("successMessage", "Restauracja " + savedRestaurant.getName() + " została pomyślnie zarejestrowana.");
+        session.setAttribute("restaurant", savedRestaurant);
+        return "redirect:/showAddingDeliveryStreetsView";  // Redirect to the next step
+    }
+
+    private void logErrors(BindingResult result) {
+        result.getAllErrors().forEach(error -> log.info("Error: {}", error.getDefaultMessage()));
+    }
+
+    private String uploadImageAndRetrieveUrl(MultipartFile image) throws IOException {
+        Map uploadResult = cloudinaryService.uploadImage(image);
+        return (String) uploadResult.get("url");
+    }
+
+    private Owner getAuthenticatedOwner(HttpSession session) {
         FoodOrderingAppUser appUser = (FoodOrderingAppUser) session.getAttribute("user");
-        log.info("Registering restaurant with appUser: {}", appUser);
         Long userId = foodOrderingAppUserRepository.findIdByUsername(appUser.getUsername());
-        Owner owner = ownerDAO.findByUserId(userId);
-        log.info("########## RestaurantController ##### registerRestaurant # userId : " + userId);
+        return ownerDAO.findByUserId(userId);
+    }
 
-        log.info("########## RestaurantController ##### registerRestaurant # owner : " + owner);
-
-        Restaurant restaurant = Restaurant.builder()
-                .name(name)
-                .description(description)
+    private Restaurant createRestaurant(RestaurantRegistrationDTO restaurantDTO, String imageUrl, Owner owner) {
+        RestaurantAddress restaurantAddress = RestaurantAddress.builder()
+                .city(restaurantDTO.getAddress().getCity())
+                .postalCode(restaurantDTO.getAddress().getPostalCode())
+                .address(restaurantDTO.getAddress().getAddress())
+                .build();
+        return Restaurant.builder()
+                .name(restaurantDTO.getName())
+                .description(restaurantDTO.getDescription())
+                .imagePath(imageUrl)
                 .address(restaurantAddress)
                 .owner(owner)
                 .build();
-
-        log.info("########## RestaurantController ##### registerRestaurant # restaurant : " + restaurant.toString());
-
-
-        Restaurant savedRestaurant = restaurantDAO.addRestaurant(restaurant, restaurantAddress, owner);
-        log.info("Registered restaurant : {}", savedRestaurant);
-
-
-        redirectAttributes.addFlashAttribute("successMessage", "Restauracja " + name + " została pomyślnie zarejestrowana.");
-        session.setAttribute("restaurant", savedRestaurant);
-        return "redirect:/showAddingDeliveryStreetsView";
     }
+
+
+
 
     @GetMapping("/showAddingDeliveryStreetsView")
     public String showAddingDeliveryStreetsView(HttpSession session, Model model) {
-
-        Enumeration<String> attributeNames = session.getAttributeNames();
-        while (attributeNames.hasMoreElements()) {
-            String attributeName = attributeNames.nextElement();
-            Object attributeValue = session.getAttribute(attributeName);
-            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
+        Restaurant restaurant = getRestaurantFromSession(session);
+        if (restaurant == null) {
+            log.warn("No restaurant found in session.");
+            return "redirect:/restaurantRegistrationForm"; // Redirect or display an error message
         }
 
-        Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
-        Long restaurantId = restaurant.getRestaurantId();
-        List<RestaurantDeliveryArea> restaurantDeliveryAreas = restaurantService
-                .findDeliveryAreaForRestaurant(restaurantId);
-        log.info("########## RestaurantController ##### showAddingDeliveryStreetsView # restaurantDeliveryAreas : " + restaurantDeliveryAreas);
+        List<RestaurantDeliveryArea> deliveryAreas = restaurantService.findDeliveryAreaForRestaurant(restaurant.getRestaurantId());
+        model.addAttribute("restaurantDeliveryAreas", deliveryAreas);
 
-
-        RestaurantDeliveryStreet testStreet = RestaurantDeliveryStreet.builder()
-                .streetName("testStreet")
-                .district("testDistrict")
-                .postalCode("01-test")
-                .build();
-
-        RestaurantDeliveryArea testArea = RestaurantDeliveryArea.builder()
-                .deliveryStreet(testStreet)
-                .build();
-        List<RestaurantDeliveryArea> testAreas = new ArrayList<>();
-        testAreas.add(testArea);
-
-        model.addAttribute("restaurantDeliveryAreas", restaurantDeliveryAreas);
-        session.setAttribute("restaurantDeliveryAreas", restaurantDeliveryAreas);
+        log.debug("Loaded {} delivery areas for restaurant ID: {}", deliveryAreas.size(), restaurant.getRestaurantId());
         return "addingDeliveryStreetView";
     }
 
+    private Restaurant getRestaurantFromSession(HttpSession session) {
+        return (Restaurant) session.getAttribute("restaurant");
+    }
+
+
     @PostMapping("/addDeliveryStreet")
-    public String addDeliveryStreet(@RequestParam("streetName") String streetName,
-                                    @RequestParam("postalCode") String postalCode,
-                                    @RequestParam("district") String district,
-                                    HttpSession session, RedirectAttributes redirectAttributes, Model model) {
+    public String addDeliveryStreet(@ModelAttribute("deliveryStreet") DeliveryStreetDTO deliveryStreetDTO,
+                                    HttpSession session, RedirectAttributes redirectAttributes) {
         Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
-        if (restaurant != null) {
-            Long restaurantId = restaurant.getRestaurantId();
-            RestaurantDeliveryStreet newDeliveryStreet = RestaurantDeliveryStreet.builder()
-                    .streetName(streetName)
-                    .postalCode(postalCode)
-                    .district(district)
-                    .build();
-
-            restaurantService.addDeliveryStreetToRestaurant(restaurantId, newDeliveryStreet);
-
-            redirectAttributes.addFlashAttribute("successMessage", "Nowa ulica dostawy została dodana.");
-        } else {
+        if (restaurant == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Nie znaleziono restauracji.");
+            return "redirect:/showAddingDeliveryStreetsView";
         }
+
+        Long restaurantId = restaurant.getRestaurantId();
+        RestaurantDeliveryStreet newDeliveryStreet = RestaurantDeliveryStreet.builder()
+                .streetName(deliveryStreetDTO.getStreetName())
+                .postalCode(deliveryStreetDTO.getPostalCode())
+                .district(deliveryStreetDTO.getDistrict())
+                .build();
+
+        restaurantService.addDeliveryStreetToRestaurant(restaurantId, newDeliveryStreet);
+        redirectAttributes.addFlashAttribute("successMessage", "Nowa ulica dostawy została dodana.");
 
         return "redirect:/showAddingDeliveryStreetsView";
     }
 
 
     @GetMapping("/showAddMenuToTheRestaurantView")
-    public String addMenuToTheRestaurantView(HttpSession session) {
+    public String showAddMenuToTheRestaurantView(HttpSession session, Model model) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            return "redirect:/login";  // Ensure the user is logged in
+        }
 
-        Owner owner = ownerDAO.findByUsername((String) session.getAttribute("username"));
-        Restaurant restaurantByOwnerId = restaurantDAO.getRestaurantByOwnerId(owner.getOwnerId());
+        Owner owner = ownerDAO.findByUsername(username);
+        if (owner == null) {
+            model.addAttribute("error", "Owner not found.");
+            return "errorPage";  // Proper error handling
+        }
 
-        List<RestaurantDeliveryArea> deliveryAreaForRestaurant = restaurantService
-                .findDeliveryAreaForRestaurant(restaurantByOwnerId.getRestaurantId());
+        Restaurant restaurant = restaurantDAO.getRestaurantByOwnerId(owner.getOwnerId());
+        if (restaurant == null) {
+            return "redirect:/showRestaurantRegistrationForm";
+        }
 
-        log.info("########## RestaurantController ##### addMenuToTheRestaurantView # deliveryAreaForRestaurant : " + deliveryAreaForRestaurant);
-
-        boolean b = deliveryAreaForRestaurant.size() == 0;
-
-        session.setAttribute("restaurant", restaurantByOwnerId);
-        if (b) {
-
+        List<RestaurantDeliveryArea> deliveryAreas = restaurantService.findDeliveryAreaForRestaurant(restaurant.getRestaurantId());
+        if (deliveryAreas.isEmpty()) {
             return "redirect:/showAddingDeliveryStreetsView";
         }
+
+        model.addAttribute("restaurant", restaurant);
         return "addMenuToTheRestaurantView";
     }
 
     @PostMapping("/addMenuToTheRestaurant")
-    public String addMenuToTheRestaurant(
-            @RequestParam("name") String name,
-            @RequestParam("description") String description,
-            HttpSession session) {
-        log.info("########## RestaurantController ##### addMenuToTheRestaurant # START");
-        Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
-        String username = (String) session.getAttribute("username");
-        if (restaurant == null) {
-            restaurant = restaurantDAO.findRestaurantByUsername(username);
-        }
-        Menu menu = Menu.builder()
-                .name(name)
-                .description(description)
-                .restaurant(restaurant)
-                .build();
-        Menu savedMenu = restaurantDAO.save(menu);
-        log.info("########## RestaurantController ##### addMenuToTheRestaurant # saved menu: {}", menu);
+    public String addMenuToTheRestaurant(@Valid @ModelAttribute("menuDTO") MenuDTO menuDTO,
+                                         BindingResult result,
+                                         HttpSession session,
+                                         RedirectAttributes redirectAttributes) {
+        log.info("Attempting to add menu to the restaurant");
 
+        if (result.hasErrors()) {
+            redirectAttributes.addFlashAttribute("formErrors", result.getAllErrors());
+            return "redirect:/addMenuToTheRestaurantView";  // assuming there's a view to add menu
+        }
+
+        Restaurant restaurant = getCurrentRestaurant(session);
+        if (restaurant == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No associated restaurant found.");
+            return "redirect:/showRestaurantRegistrationForm";
+        }
+
+        Menu menu = convertToMenu(menuDTO, restaurant);
+        Menu savedMenu = restaurantService.addMenu(menu);
+        log.info("Menu added: {}", savedMenu);
 
         session.setAttribute("menuToUpdate", savedMenu);
-        log.info("########## RestaurantController ##### addMenuToTheRestaurant # FINISHED");
         return "redirect:/addItemsToTheMenuView";
     }
+
+    private Restaurant getCurrentRestaurant(HttpSession session) {
+        Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
+        if (restaurant == null) {
+            String username = (String) session.getAttribute("username");
+            restaurant = restaurantService.getRestaurantByUsername(username);
+            session.setAttribute("restaurant", restaurant);
+        }
+        return restaurant;
+    }
+
+    private Menu convertToMenu(MenuDTO menuDTO, Restaurant restaurant) {
+        return Menu.builder()
+                .name(menuDTO.getName())
+                .description(menuDTO.getDescription())
+                .restaurant(restaurant)
+                .build();
+    }
+
 
     @GetMapping("/addItemsToTheMenuView")
     public String addMenuItemsToTheMenuView(HttpSession session, Model model) {
@@ -291,13 +279,6 @@ public class RestaurantController {
         Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
         FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
         String username = user.getUsername();
-
-        Enumeration<String> attributeNames = session.getAttributeNames();
-        while (attributeNames.hasMoreElements()) {
-            String attributeName = attributeNames.nextElement();
-            Object attributeValue = session.getAttribute(attributeName);
-            log.info("Session attribute - Name: {}, Value: {}", attributeName, attributeValue);
-        }
 
         if (restaurant == null) {
             log.info("########## RestaurantController ##### addMenuItemsToTheMenu # restaurant == null ");
@@ -359,7 +340,7 @@ public class RestaurantController {
                 .price(price)
                 .category(category)
                 .menu(menu)
-                .imagePath(imageUrl) // Zapisz URL obrazu
+                .imagePath(imageUrl)
                 .build();
 
         log.info("########## RestaurantController ##### addMenuItemToSession # menuItem TO ADD: {}", menuItem);
@@ -400,7 +381,7 @@ public class RestaurantController {
     }
 
     @GetMapping("/changeMenu")
-    public String changeMenu(HttpSession session, Model model) {
+    public String changeMenu(HttpSession session) {
         Menu menu = (Menu) session.getAttribute("menu");
         log.info("########## RestaurantController ##### changeMenu # menu: {}", menu);
         if (menu == null) {
@@ -421,5 +402,52 @@ public class RestaurantController {
         restaurantDAO.deleteMenu(menu);
 
         return "redirect:/showAddMenuToTheRestaurantView";
+    }
+
+    private ShoppingCart ensureShoppingCart(HttpSession session, Long restaurantId, String username) {
+        ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
+        if (shoppingCart == null || !shoppingCart.getRestaurantId().equals(restaurantId)) {
+            Long userId = foodOrderingAppUserRepository.findIdByUsername(username);
+            shoppingCart = ShoppingCart.builder()
+                    .userId(userId)
+                    .restaurantId(restaurantId)
+                    .build();
+            session.setAttribute("shoppingCart", shoppingCart);
+        }
+        return shoppingCart;
+    }
+
+    private Menu getMenuForRestaurant(Long restaurantId) throws Exception {
+        Menu menu = restaurantService.getMenuRestaurantById(restaurantId);
+        if (menu == null) {
+            throw new Exception("Menu not found for restaurantId: " + restaurantId);
+        }
+        Set<MenuItem> menuItems = restaurantService.getMenuItemsByMenuId(menu.getMenuId());
+        return menu.withMenuItems(menuItems == null ? new HashSet<>() : menuItems);
+    }
+
+    private void updateModelWithMenuDetails(Model model, ShoppingCart shoppingCart, Long restaurantId, Menu menu, HttpSession session) {
+        BigDecimal totalValue = calculateTotalValue(shoppingCart);
+        model.addAttribute("menu", menu);
+        model.addAttribute("shoppingCart", shoppingCart);
+        model.addAttribute("restaurantId", restaurantId);
+        model.addAttribute("totalValue", totalValue);
+        session.setAttribute("totalValue", totalValue);
+        session.setAttribute("restaurantId", restaurantId);
+    }
+
+    private BigDecimal calculateTotalValue(ShoppingCart shoppingCart) {
+        return shoppingCart.getItems().entrySet().stream()
+                .map(entry -> entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private ShoppingCart getOrCreateShoppingCart(HttpSession session) {
+        ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
+        if (shoppingCart == null) {
+            shoppingCart = ShoppingCart.builder().build();
+            session.setAttribute("shoppingCart", shoppingCart);
+        }
+        return shoppingCart;
     }
 }

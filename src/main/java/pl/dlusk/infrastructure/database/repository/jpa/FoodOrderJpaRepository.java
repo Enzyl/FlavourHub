@@ -25,7 +25,7 @@ public interface FoodOrderJpaRepository extends JpaRepository<FoodOrderEntity, L
     @Modifying
     @Query("UPDATE FoodOrderEntity fo SET fo.status = :status WHERE fo.id = :orderId")
     void updateFoodOrderStatus(@Param("orderId") Long orderId, @Param("status") String status);
-    @Query("SELECT o FROM FoodOrderEntity o WHERE o.order_number = :orderNumber")
+    @Query("SELECT o FROM FoodOrderEntity o WHERE o.orderNumber = :orderNumber")
     FoodOrderEntity findByOrderNumber(String orderNumber );
 
 }

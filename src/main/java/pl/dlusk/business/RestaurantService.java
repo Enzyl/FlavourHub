@@ -14,6 +14,7 @@ import pl.dlusk.infrastructure.database.repository.mapper.RestaurantDeliveryStre
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -45,8 +46,8 @@ public class RestaurantService {
         restaurantDAO.delete(restaurantId);
     }
 
-    public Menu getMenuByRestaurantId(Long restaurantId) {
-        return restaurantDAO.findMenuRestaurantById(restaurantId);
+    public Menu getMenuByRestaurant(Restaurant restaurant) {
+        return restaurantDAO.findMenuRestaurantById(restaurant.getRestaurantId());
 
     }
 
@@ -112,4 +113,26 @@ public class RestaurantService {
 
         log.info("New delivery street added successfully to restaurant with ID: {}", restaurantId);
     }
+
+    public Set<MenuItem> getMenuItemsByMenuId(Long menuId){
+        Set<MenuItem> menuItems = restaurantDAO.findMenuItemsByMenuId(menuId);
+        return menuItems;
+
+    }
+
+    public Menu getMenuRestaurantById(Long restaurantId) {
+        Menu menu = restaurantDAO.findMenuRestaurantById(restaurantId);
+        return menu;
+    }
+
+
+    public MenuItem getMenuItemById(Long menuItemId) {
+        MenuItem menuItemById = restaurantDAO.findMenuItemById(menuItemId);
+        return menuItemById;
+    }
+    public Menu addMenu(Menu menu) {
+        Menu savedMenu = restaurantDAO.save(menu);
+        return savedMenu;
+    }
+
 }

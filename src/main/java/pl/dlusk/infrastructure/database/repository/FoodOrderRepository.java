@@ -61,8 +61,8 @@ public class FoodOrderRepository implements FoodOrderDAO {
         foodOrderEntity.setRestaurantEntity(restaurantEntity);
 
         FoodOrderEntity savedFoodOrderEntity = foodOrderJpaRepository.save(foodOrderEntity);
-
         FoodOrder savedFoodOrder = foodOrderEntityMapper.mapFromEntity(savedFoodOrderEntity);
+
 
         Delivery delivery = foodOrder.getDelivery();
         DeliveryEntity deliveryEntity = deliveryEntityMapper.mapToEntity(delivery);

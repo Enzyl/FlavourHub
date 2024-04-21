@@ -7,7 +7,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-@Getter @Setter
+@Getter
+@Setter
 @ToString(of = {"id","orderTime"})
 @EqualsAndHashCode(of = {"id","orderTime"})
 @NoArgsConstructor
@@ -31,7 +32,7 @@ public class FoodOrderEntity {
     private BigDecimal totalPrice;
 
     @Column(name = "order_number", nullable = false)
-    private String order_number;
+    private String orderNumber;
 
     @OneToOne(mappedBy = "foodOrderEntity")
     private ReviewEntity reviewEntity;

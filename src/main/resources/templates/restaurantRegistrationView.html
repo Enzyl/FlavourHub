@@ -11,39 +11,39 @@
     <form th:action="@{/registerRestaurant}" th:object="${restaurant}" method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label for="name">Nazwa Restauracji:</label>
-            <input type="text" id="name" class="form-control" th:field="*{name}" required>
+            <input type="text" id="name" class="form-control" th:field="*{name}">
+            <div class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
         </div>
 
         <div class="form-group">
             <label for="description">Opis:</label>
-            <textarea id="description" class="form-control" th:field="*{description}" required></textarea>
+            <textarea id="description" class="form-control" th:field="*{description}"></textarea>
+            <div class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
         </div>
 
         <div class="form-group">
-            <label for="imagePath">Ścieżka do obrazu:</label>
-            <input type="file" id="imagePath" class="form-control-file" th:field="*{imagePath}">
+            <label for="itemImage">Obrazek restauracji:</label>
+            <input type="file" id="itemImage" name="image" class="form-control">
         </div>
 
-        <h3>Adres Restauracji:</h3>
         <div class="form-group">
             <label for="city">Miasto:</label>
-            <input type="text" id="city" class="form-control" th:field="*{address.city}" required>
+            <input type="text" id="city" class="form-control" th:field="*{address.city}">
         </div>
-
         <div class="form-group">
             <label for="postalCode">Kod pocztowy:</label>
-            <input type="text" id="postalCode" class="form-control" th:field="*{address.postalCode}" required>
+            <input type="text" id="postalCode" class="form-control" th:field="*{address.postalCode}">
         </div>
-
         <div class="form-group">
             <label for="address">Adres:</label>
-            <input type="text" id="address" class="form-control" th:field="*{address.address}" required>
+            <input type="text" id="address" class="form-control" th:field="*{address.address}">
         </div>
 
-        <!-- Tutaj możesz dodać więcej pól dotyczących dostaw, jeśli jest to konieczne -->
 
         <button type="submit" class="btn btn-primary">Zarejestruj Restaurację</button>
     </form>
+
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

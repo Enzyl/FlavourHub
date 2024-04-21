@@ -17,6 +17,10 @@
         .action-buttons {
             margin-top: 20px;
         }
+        .menu-item-image {
+            width: 100px; /* Ustaw odpowiednią szerokość */
+            height: auto; /* Zachowaj proporcje */
+        }
     </style>
 </head>
 <body>
@@ -53,25 +57,24 @@
 
     <div class="action-buttons">
         <a th:href="@{/changeMenu}" class="btn btn-primary">Zmień menu</a>
-        <!-- Dodany przycisk 'Pokaż aktualne zamówienia' -->
         <a th:href="@{/showOrdersInProgress}" class="btn btn-info">Pokaż aktualne zamówienia</a>
     </div>
-
 </div>
-<!-- Sekcja Menu -->
+
 <!-- Sekcja Menu -->
 <div class="container menu-section">
     <h2>Menu</h2>
-    <div th:if="${#lists.size(menu.menuItems) == 0}">
+    <div th:if="${#lists.isEmpty(menu.menuItems)}">
         <p>Brak pozycji w menu.</p>
     </div>
-    <div th:unless="${#lists.size(menu.menuItems) == 0}">
+    <div th:unless="${#lists.isEmpty(menu.menuItems)}">
         <table class="table">
             <thead>
             <tr>
                 <th>Nazwa</th>
                 <th>Opis</th>
                 <th>Kategoria</th>
+                <th>Obraz</th>
                 <th>Cena</th>
             </tr>
             </thead>
@@ -80,13 +83,14 @@
                 <td th:text="${menuItem.name}">Nazwa Pozycji</td>
                 <td th:text="${menuItem.description}">Opis Pozycji</td>
                 <td th:text="${menuItem.category}">Kategoria</td>
+                <td><img th:src="${menuItem.imagePath}" class="menu-item-image" alt="Menu Item Image"></td>
                 <td th:text="${menuItem.price}">Cena</td>
             </tr>
             </tbody>
         </table>
     </div>
-
 </div>
+
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

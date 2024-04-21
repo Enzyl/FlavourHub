@@ -23,7 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-
 class OwnerRepositoryTest {
 
     @Mock
@@ -88,7 +87,6 @@ class OwnerRepositoryTest {
     @Test
     void saveOwnerWithUserBeforeShouldPersistOwner() {
         FoodOrderingAppUser mockUser = mock(FoodOrderingAppUser.class);
-        when(mockUser.getUsername()).thenReturn("testUsername");
 
         FoodOrderingAppUserEntity userEntity = new FoodOrderingAppUserEntity();
         userEntity.setUsername("testUsername");

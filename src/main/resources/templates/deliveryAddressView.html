@@ -11,23 +11,24 @@
     <form th:action="@{/submitDeliveryAddress}" method="post">
         <div class="mb-3">
             <label for="streetName" class="form-label">Street Name:</label>
-            <input type="text" class="form-control" id="streetName" name="streetName" required>
+            <input type="text" class="form-control" id="streetName" name="streetName" required pattern="[A-Za-z0-9\s]{1,100}">
         </div>
         <div class="mb-3">
             <label for="buildingNumber" class="form-label">Building Number:</label>
-            <input type="text" class="form-control" id="buildingNumber" name="buildingNumber" required>
+            <input type="text" class="form-control" id="buildingNumber" name="buildingNumber" required pattern="\d+[A-Za-z]*">
         </div>
         <div class="mb-3">
             <label for="apartmentNumber" class="form-label">Apartment Number:</label>
-            <input type="text" class="form-control" id="apartmentNumber" name="apartmentNumber">
+            <input type="text" class="form-control" id="apartmentNumber" name="apartmentNumber" pattern="\d*">
         </div>
         <div class="mb-3">
             <label for="postalCode" class="form-label">Postal Code:</label>
-            <input type="text" class="form-control" id="postalCode" name="postalCode" required>
+            <input type="text" class="form-control" id="postalCode" name="postalCode" required pattern="\d{2}-\d{3}" title="Format kodu pocztowego: 00-000">
         </div>
+
         <div class="mb-3">
             <label for="city" class="form-label">City:</label>
-            <input type="text" class="form-control" id="city" name="city" required>
+            <input type="text" class="form-control" id="city" name="city" required pattern="[A-Za-z\s]{1,100}">
         </div>
         <div class="mb-3">
             <label for="additionalInstructions" class="form-label">Additional Instructions:</label>
