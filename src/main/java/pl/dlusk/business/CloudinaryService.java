@@ -23,6 +23,11 @@ public class CloudinaryService {
         this.cloudinary = cloudinary;
     }
 
+    public String uploadImageAndGetUrl(MultipartFile image) throws IOException {
+        Map uploadResult = uploadImage(image);
+        return (String) uploadResult.get("url");
+    }
+
     public Map uploadImage(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new IOException("Failed to upload image because the file is empty.");
@@ -31,13 +36,13 @@ public class CloudinaryService {
 
         String publicId = UUID.randomUUID().toString();
 
-        // Attempt to optimize image to fit within 1 MB
+
         Transformation transform = new Transformation()
-                .width(500)  // Target width
-                .height(500) // Target height
-                .crop("limit") // Limit crop to keep aspect ratio
-                .quality("auto:eco") // Auto adjust quality to reduce file size
-                .fetchFormat("auto"); // Auto format based on the browser
+                .width(500)
+                .height(500)
+                .crop("limit")
+                .quality("auto:eco")
+                .fetchFormat("auto");
 
         try {
             return cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(

@@ -92,7 +92,6 @@ public class ClientService {
 
     public FoodOrderingAppUser getUserByUsername(String username) {
         FoodOrderingAppUser user = foodOrderingAppUserRepository.findByUsername(username);
-
         return user;
     }
 

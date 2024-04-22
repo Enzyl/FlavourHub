@@ -84,7 +84,7 @@ public class OwnerController {
             return "redirect:/showAddMenuToTheRestaurantView";
         }
 
-        Set<MenuItem> menuItems = restaurantService.getMenuItemsByMenuId(menu.getMenuId());
+        Set<MenuItem> menuItems = restaurantService.getMenuItemsByMenuId(menu);
         if (menuItems.isEmpty()) {
             log.info("No menu items found for menu ID: {}", menu.getMenuId());
             return "redirect:/addItemsToTheMenuView";

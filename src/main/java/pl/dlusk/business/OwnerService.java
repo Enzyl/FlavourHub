@@ -1,5 +1,6 @@
 package pl.dlusk.business;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,7 @@ public class OwnerService {
         ownerDAO.deleteById(ownerId);
     }
 
-    public Restaurant getRestaurantsByOwnerId(Long ownerId) {
+    public Restaurant getRestaurantByOwnerId(Long ownerId) {
         return restaurantDAO.getRestaurantByOwnerId(ownerId);
     }
 
@@ -102,6 +103,16 @@ public class OwnerService {
     public FoodOrderingAppUser getUserByUsername(String username) {
         FoodOrderingAppUser userByUsername = foodOrderingAppUserRepository.findByUsername(username);
         return userByUsername;
+    }
+public Owner  getByUsername (String username) {
+    Owner owner = ownerDAO.findByUsername(username);
+    return owner;
+}
+
+    public Owner getAuthenticatedOwner(HttpSession session) {
+        FoodOrderingAppUser appUser = (FoodOrderingAppUser) session.getAttribute("user");
+        Long userId = foodOrderingAppUserRepository.findIdByUsername(appUser.getUsername());
+        return ownerDAO.findByUserId(userId);
     }
 
 }

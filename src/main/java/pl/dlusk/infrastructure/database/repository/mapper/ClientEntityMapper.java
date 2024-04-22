@@ -7,7 +7,6 @@ import pl.dlusk.domain.Client;
 import pl.dlusk.infrastructure.database.entity.ClientEntity;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-
 public interface ClientEntityMapper {
 
     @Mapping(source = "id", target = "clientId")

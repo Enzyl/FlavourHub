@@ -6,6 +6,7 @@ import pl.dlusk.business.dao.FoodOrderDAO;
 import pl.dlusk.business.dao.PaymentDAO;
 import pl.dlusk.domain.FoodOrder;
 import pl.dlusk.domain.Payment;
+import pl.dlusk.domain.shoppingCart.ShoppingCart;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -50,5 +51,10 @@ public class PaymentService {
         return paymentsForClientByHisId;
     }
 
+    public BigDecimal calculateTotalValue(ShoppingCart shoppingCart) {
+        return shoppingCart.getItems().entrySet().stream()
+                .map(entry -> entry.getKey().getPrice().multiply(BigDecimal.valueOf(entry.getValue())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
 }

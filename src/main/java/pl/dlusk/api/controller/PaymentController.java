@@ -30,9 +30,8 @@ public class PaymentController {
         log.info("########## PaymentController #### processBlikCode #  START");
         BigDecimal totalAmount = (BigDecimal) session.getAttribute("totalValue");
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDateTime = LocalDateTime.now().format(formatter);
-        LocalDateTime paymentTime = LocalDateTime.parse(formattedDateTime, formatter);
+        String formattedDateTime = LocalDateTime.now().format(DATE_TIME_FORMATTER);
+        LocalDateTime paymentTime = LocalDateTime.parse(formattedDateTime, DATE_TIME_FORMATTER);
 
         Payment payment = Payment.builder()
                 .paymentAmount(totalAmount)
