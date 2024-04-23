@@ -55,7 +55,7 @@ public class FoodOrderRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Inicjalizacja MenuItem
+
         MenuItem menuItem = MenuItem.builder()
                 .menuItemId(1L)
                 .name("Pizza Margherita")
@@ -63,18 +63,18 @@ public class FoodOrderRepositoryTest {
                 .category("Pizza")
                 .price(new BigDecimal("24.00"))
                 .imagePath("/images/pizza_margherita.jpg")
-                .menu(null) // Jeśli istnieje odpowiedni obiekt Menu, należy go tu przypisać
+                .menu(null)
                 .build();
 
-        // Inicjalizacja OrderItem
+
         orderItem = OrderItem.builder()
                 .orderItemId(1L)
                 .menuItem(menuItem)
                 .quantity(2)
-                .foodOrder(null) // To zostanie uzupełnione, gdy FoodOrder zostanie stworzony
+                .foodOrder(null)
                 .build();
 
-        // Ustawienie Set<OrderItem> dla FoodOrder
+
         Set<OrderItem> orderItems = Set.of(orderItem);
 
         client = Mockito.mock(Client.class);
@@ -82,7 +82,7 @@ public class FoodOrderRepositoryTest {
         delivery = Mockito.mock(Delivery.class);
         payment = Mockito.mock(Payment.class);
 
-        // Inicjalizacja FoodOrder
+
         foodOrder = FoodOrder.builder()
                 .foodOrderId(1L)
                 .orderTime(LocalDateTime.now())
@@ -95,10 +95,10 @@ public class FoodOrderRepositoryTest {
                 .payment(payment)
                 .build();
 
-        // Ustawienie powiązania zwrotnego z OrderItem do FoodOrder
+
         orderItems.forEach(item -> item.withFoodOrder(foodOrder));
 
-        // Inicjalizacja FoodOrderEntity
+
         foodOrderEntity = new FoodOrderEntity();
         foodOrderEntity.setId(foodOrder.getFoodOrderId());
         foodOrderEntity.setStatus(foodOrder.getFoodOrderStatus());
@@ -106,14 +106,14 @@ public class FoodOrderRepositoryTest {
         foodOrderEntity.setOrderTime(foodOrder.getOrderTime());
         foodOrderEntity.setClientEntity(new ClientEntity());
         foodOrderEntity.setRestaurantEntity(new RestaurantEntity());
-        // Uzupełnij pozostałe pola encji FoodOrderEntity, jeśli to konieczne
+
 
     }
 
 
     @Test
     void saveShouldPersistFoodOrderWithAllAssociations() {
-        // Arrange
+
         FoodOrderEntity foodOrderEntity = new FoodOrderEntity();
         DeliveryEntity deliveryEntity = new DeliveryEntity();
         PaymentEntity paymentEntity = new PaymentEntity();
@@ -132,10 +132,10 @@ public class FoodOrderRepositoryTest {
         when(orderItemEntityMapper.mapToEntity(orderItem)).thenReturn(orderItemEntity);
         when(menuItemEntityMapper.mapToEntity(orderItem.getMenuItem())).thenReturn(new MenuItemEntity());
 
-        // Act
+
         FoodOrder result = foodOrderRepository.save(foodOrder);
 
-        // Assert
+
         verify(foodOrderEntityMapper).mapToEntity(foodOrder);
         verify(foodOrderJpaRepository).save(foodOrderEntity);
         verify(foodOrderEntityMapper).mapFromEntity(foodOrderEntity);
@@ -160,17 +160,17 @@ public class FoodOrderRepositoryTest {
         when(foodOrderJpaRepository.findById(anyLong())).thenReturn(Optional.of(foodOrderEntity));
         when(foodOrderEntityMapper.mapFromEntity(any(FoodOrderEntity.class))).thenReturn(foodOrder);
 
-        // Akcja
+
         Optional<FoodOrder> foundFoodOrder = foodOrderRepository.findById(1L);
 
-        // Weryfikacja
+
         assertThat(foundFoodOrder).isPresent();
         FoodOrder foodOrderResult = foundFoodOrder.get();
         assertThat(foodOrderResult.getFoodOrderId()).isEqualTo(foodOrder.getFoodOrderId());
         assertThat(foodOrderResult.getOrderTime()).isEqualTo(foodOrder.getOrderTime());
         assertThat(foodOrderResult.getFoodOrderStatus()).isEqualTo(foodOrder.getFoodOrderStatus());
         assertThat(foodOrderResult.getTotalPrice()).isEqualTo(foodOrder.getTotalPrice());
-        // Weryfikuj pozostałe pola
+
     }
 
     @Test
@@ -179,17 +179,17 @@ public class FoodOrderRepositoryTest {
         when(foodOrderJpaRepository.findAll()).thenReturn(foodOrderEntities);
         when(foodOrderEntityMapper.mapFromEntity(any(FoodOrderEntity.class))).thenReturn(foodOrder);
 
-        // Akcja
+
         List<FoodOrder> allFoodOrders = foodOrderRepository.findAll();
 
-        // Weryfikacja
+
         assertThat(allFoodOrders).hasSize(1);
         FoodOrder foodOrderResult = allFoodOrders.get(0);
         assertThat(foodOrderResult.getFoodOrderId()).isEqualTo(foodOrder.getFoodOrderId());
         assertThat(foodOrderResult.getOrderTime()).isEqualTo(foodOrder.getOrderTime());
         assertThat(foodOrderResult.getFoodOrderStatus()).isEqualTo(foodOrder.getFoodOrderStatus());
         assertThat(foodOrderResult.getTotalPrice()).isEqualTo(foodOrder.getTotalPrice());
-        // Weryfikuj pozostałe pola
+
     }
 
     @Test

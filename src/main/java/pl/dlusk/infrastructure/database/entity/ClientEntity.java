@@ -24,7 +24,6 @@ public class ClientEntity {
     @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
 
-    // Assuming a OneToMany relationship to food_order
     @OneToMany(mappedBy = "clientEntity",fetch = FetchType.LAZY)
     private Set<FoodOrderEntity> foodOrderEntities;
 

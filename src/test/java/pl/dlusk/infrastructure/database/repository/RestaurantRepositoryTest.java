@@ -187,20 +187,20 @@ class RestaurantRepositoryTest {
 
     @Test
     void getRestaurantsDeliveringToAreaShouldReturnRestaurants() {
-        // Setup test data
+
         RestaurantEntity mockRestaurantEntity = new RestaurantEntity();
         mockRestaurantEntity.setId(1L);
 
         RestaurantDeliveryAreaEntity deliveryAreaEntity = new RestaurantDeliveryAreaEntity();
         deliveryAreaEntity.setRestaurantEntity(mockRestaurantEntity);
 
-        // Create a Pageable object (typically needed for real calls)
+
         Pageable pageable = PageRequest.of(0, 10);
 
-        // Setup the Page object to return
+
         Page<RestaurantDeliveryAreaEntity> deliveryAreasPage = new PageImpl<>(List.of(deliveryAreaEntity), pageable, 1);
 
-        // Mock the repository responses
+
         when(restaurantDeliveryAreaJpaRepository.findByStreetName(eq("Test Street"), any(Pageable.class)))
                 .thenReturn(deliveryAreasPage);
 
@@ -208,13 +208,13 @@ class RestaurantRepositoryTest {
         when(restaurantJpaRepository.findAllById(anySet())).thenReturn(restaurantEntities);
         when(restaurantEntityMapper.mapFromEntity(any(RestaurantEntity.class))).thenReturn(restaurant);
 
-        // Execute the method under test
+
         Page<Restaurant> result = restaurantRepository.findRestaurantsDeliveringToArea("Test Street", pageable);
 
-        // Assert the results
+
         assertThat(result).isNotNull();
-        assertThat(result.getTotalElements()).isEqualTo(1); // Check the number of elements
-        assertThat(result.getContent()).hasSize(1); // Check the size of the content list
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualToComparingFieldByField(restaurant);
     }
 

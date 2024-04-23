@@ -18,7 +18,6 @@ public interface FoodOrderJpaRepository extends JpaRepository<FoodOrderEntity, L
     List<FoodOrderEntity> findByStatus(String status);
     List<FoodOrderEntity> findByOrderTimeBetween(LocalDateTime start, LocalDateTime end);
 
-    // Metoda do wyszukiwania restauracji na podstawie FoodOrder id
     @Query("SELECT fo.restaurantEntity FROM FoodOrderEntity fo WHERE fo.id = :foodOrderId")
     RestaurantEntity findRestaurantByFoodOrderId(Long foodOrderId);
 

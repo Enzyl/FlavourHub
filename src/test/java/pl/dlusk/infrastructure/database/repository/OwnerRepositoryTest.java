@@ -82,7 +82,7 @@ class OwnerRepositoryTest {
         assertThat(owners).hasSize(1);
         assertThat(owners.get(0)).isEqualToComparingFieldByField(owner);
     }
-// Kontynuacja klasy OwnerRepositoryTest
+
 
     @Test
     void saveOwnerWithUserBeforeShouldPersistOwner() {
@@ -94,16 +94,16 @@ class OwnerRepositoryTest {
         when(foodOrderingAppUserJpaRepository.save(any(FoodOrderingAppUserEntity.class))).thenReturn(userEntity);
 
         OwnerEntity ownerEntityWithUser = new OwnerEntity();
-        ownerEntityWithUser.setUser(userEntity); // Ustawienie powiązania z użytkownikiem
-        // Ustaw pozostałe wartości dla ownerEntityWithUser analogicznie do ownerEntity
+        ownerEntityWithUser.setUser(userEntity);
+
         when(ownerEntityMapper.mapToEntity(any(Owner.class))).thenReturn(ownerEntityWithUser);
         when(ownerJpaRepository.save(any(OwnerEntity.class))).thenReturn(ownerEntityWithUser);
-        when(ownerEntityMapper.mapFromEntity(ownerEntityWithUser)).thenReturn(owner.withUser(mockUser)); // Ustawienie mockUser w zwracanym obiekcie Owner
+        when(ownerEntityMapper.mapFromEntity(ownerEntityWithUser)).thenReturn(owner.withUser(mockUser));
 
         Owner savedOwner = ownerRepository.saveOwnerWithUserBefore(owner, mockUser);
 
         assertThat(savedOwner).isNotNull();
-        // Użyj isEqualToIgnoringGivenFields, aby zignorować pole user podczas porównania
+
         assertThat(savedOwner).isEqualToIgnoringGivenFields(owner, "user");
     }
 
@@ -127,7 +127,7 @@ class OwnerRepositoryTest {
         mockOwnerEntity.setId(1L);
         FoodOrderingAppUserEntity mockUserEntity = new FoodOrderingAppUserEntity();
         mockOwnerEntity.setUser(mockUserEntity);
-        // Załóżmy, że ID użytkownika to również 1L dla uproszczenia
+
         mockUserEntity.setId(1L);
 
         when(ownerJpaRepository.findById(1L)).thenReturn(Optional.of(mockOwnerEntity));
@@ -176,7 +176,7 @@ class OwnerRepositoryTest {
 
     @Test
     void existsByIdShouldReturnTrueWhenOwnerExists() {
-        // Mockowanie metody findById zamiast existsById
+
         when(ownerJpaRepository.findById(anyLong())).thenReturn(Optional.of(ownerEntity));
 
         boolean exists = ownerRepository.existsById(1L);
@@ -188,7 +188,7 @@ class OwnerRepositoryTest {
     @Test
     void existsByNipShouldReturnTrueWhenOwnerExists() {
         when(ownerJpaRepository.findByNip(anyString())).thenReturn(Optional.of(ownerEntity));
-        when(ownerEntityMapper.mapFromEntity(any(OwnerEntity.class))).thenReturn(owner); // Dodaj tę linię
+        when(ownerEntityMapper.mapFromEntity(any(OwnerEntity.class))).thenReturn(owner);
 
         boolean exists = ownerRepository.existsByNip("1234567890");
 

@@ -29,14 +29,11 @@ class PaymentRepositoryTest {
     @InjectMocks
     private PaymentRepository paymentRepository;
 
-    @BeforeEach
-    void setUp() {
-        // Set up any required configuration before each test
-    }
+
 
     @Test
     void findByIdShouldReturnPayment() {
-        // Given
+
         Long paymentId = 1L;
         PaymentEntity paymentEntity = new PaymentEntity();
         paymentEntity.setId(paymentId);
@@ -51,10 +48,10 @@ class PaymentRepositoryTest {
         when(paymentJpaRepository.findById(paymentId)).thenReturn(Optional.of(paymentEntity));
         when(paymentEntityMapper.mapFromEntity(paymentEntity)).thenReturn(payment);
 
-        // When
+
         Payment foundPayment = paymentRepository.findById(paymentId);
 
-        // Then
+
         assertThat(foundPayment).isNotNull();
         assertThat(foundPayment.getPaymentId()).isEqualTo(paymentId);
         assertThat(foundPayment.getPaymentMethod()).isEqualTo(payment.getPaymentMethod());
@@ -65,7 +62,7 @@ class PaymentRepositoryTest {
 
     @Test
     void saveShouldPersistPayment() {
-        // Given
+
         Payment paymentToSave = Payment.builder()
                 .paymentMethod("Credit Card")
                 .paymentStatus("Pending")
@@ -87,10 +84,10 @@ class PaymentRepositoryTest {
         when(paymentJpaRepository.save(paymentEntityToSave)).thenReturn(savedPaymentEntity);
         when(paymentEntityMapper.mapFromEntity(savedPaymentEntity)).thenReturn(savedPayment);
 
-        // When
+
         Payment result = paymentRepository.save(paymentToSave);
 
-        // Then
+
         assertThat(result).isNotNull();
         assertThat(result.getPaymentId()).isEqualTo(savedPayment.getPaymentId());
         assertThat(result.getPaymentMethod()).isEqualTo(savedPayment.getPaymentMethod());

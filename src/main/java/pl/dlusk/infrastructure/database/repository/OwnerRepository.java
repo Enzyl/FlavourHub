@@ -53,13 +53,11 @@ public class OwnerRepository implements OwnerDAO {
         log.info("########## OwnerRepository #### existingUserByEmail {}",existingUserByEmail);
         if (existingOwnerByNIP.isPresent()) {
             log.info("########## OwnerRepository #### existingOwnerByNIP.isPresent() {}",existingOwnerByNIP.isPresent());
-            // Rzuć wyjątek, jeśli owner już istnieje
             throw new UsernameAlreadyExistsException(owner.getName());
         }
 
         if (existingUserByEmail.isPresent()) {
             log.info("########## OwnerRepository #### existingUserByEmail.isPresent() {}",existingUserByEmail.isPresent());
-            // Rzuć wyjątek, jeśli użytkownik już istnieje
             throw new UsernameAlreadyExistsException(user.getUsername());
         }
         FoodOrderingAppUserEntity userEntity = foodOrderingAppUserEntityMapper.mapToEntity(user);

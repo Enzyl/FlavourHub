@@ -20,7 +20,7 @@ public interface RestaurantDeliveryAreaEntityMapper {
 
 
     @Named("mapRestaurantFromEntityWithIdOnly")
-    @Mapping(source = "id", target = "restaurantId") // Ustawienie target na odpowiednie pole w klasie Restaurant
+    @Mapping(source = "id", target = "restaurantId")
     default Restaurant mapRestaurantFromEntityWithIdOnly(RestaurantEntity restaurantEntity) {
         if (restaurantEntity == null) {
             return null;
@@ -31,7 +31,7 @@ public interface RestaurantDeliveryAreaEntityMapper {
     }
 
     @Named("mapDeliveryStreetWithIdOnly")
-    @Mapping(source = "id", target = "restaurantDeliveryStreetId") // Ustawienie target na odpowiednie pole w klasie RestaurantDeliveryStreet
+    @Mapping(source = "id", target = "restaurantDeliveryStreetId")
     default RestaurantDeliveryStreet mapDeliveryStreetWithIdOnly(RestaurantDeliveryStreetEntity entity) {
         if (entity == null) {
             return null;

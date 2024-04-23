@@ -26,7 +26,6 @@ public class MenuEntity {
     @JoinColumn(name = "restaurant_id", referencedColumnName = "id")
     private RestaurantEntity restaurantEntity;
 
-    // Relationship to menu_items is not defined in the provided SQL, assuming OneToMany
     @OneToMany(mappedBy = "menuEntity",fetch = FetchType.LAZY)
     private Set<MenuItemEntity> menuItemEntities;
 

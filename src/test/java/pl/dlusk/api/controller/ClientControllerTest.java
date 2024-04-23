@@ -1,29 +1,47 @@
 package pl.dlusk.api.controller;
 
+import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
+import pl.dlusk.business.ClientService;
+import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.domain.Client;
-import pl.dlusk.domain.FoodOrder;
-import pl.dlusk.domain.FoodOrderStatus;
-import pl.dlusk.infrastructure.database.entity.ClientEntity;
-import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
-import pl.dlusk.infrastructure.database.repository.jpa.ClientJpaRepository;
-import pl.dlusk.infrastructure.database.repository.mapper.ClientEntityMapper;
-import pl.dlusk.infrastructure.database.repository.mapper.FoodOrderEntityMapper;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserJpaRepository;
-
+import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+@ExtendWith(MockitoExtension.class)
 class ClientControllerTest {
+
+    @Mock
+    private ClientService clientService;
+
+    @Mock
+    private RedirectAttributes redirectAttributes;
+
+    @InjectMocks
+    private ClientController controller;
+
+    @Mock
+    private HttpSession session;
+
+    @Mock
+    private Model model;
+
+
     @Test
     void registerClient_Success() {
         // Arrange
@@ -36,7 +54,7 @@ class ClientControllerTest {
                 "phoneNumber", "1234567890"
         );
         FoodOrderingAppUser user = new FoodOrderingAppUser();
-        Client client = new Client();
+        Client client = Client.builder().build();
 
         when(clientService.registerClient(any(Client.class), any(FoodOrderingAppUser.class))).thenReturn(client);
 
@@ -98,7 +116,22 @@ class ClientControllerTest {
     }
 
     @Test
-    void showClientLoggedInView() {
+    void showClientLoggedInView_ReturnsCorrectView() {
+        // Arrange
+        String expectedUsername = "testUser";
+        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        user.setUsername(expectedUsername);
+
+        when(session.getAttribute("username")).thenReturn(expectedUsername);
+        when(clientService.getUserByUsername(expectedUsername)).thenReturn(user);
+
+        // Act
+        String viewName = controller.showClientLoggedInView(model, session);
+
+        // Assert
+        assertEquals("clientLoggedInView", viewName);
+        verify(session).setAttribute("user", user);
+        verify(model).addAttribute("username", expectedUsername);
     }
 
     @Test

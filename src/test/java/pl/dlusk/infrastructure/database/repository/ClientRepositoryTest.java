@@ -65,7 +65,7 @@ class ClientRepositoryTest {
 
         foodOrderEntity = new FoodOrderEntity();
         foodOrderEntity.setId(1L);
-        // Uzupełnij pozostałe pola foodOrderEntity jeśli to konieczne
+
 
         foodOrderEntities = new HashSet<>();
         foodOrderEntities.add(foodOrderEntity);
@@ -102,7 +102,7 @@ class ClientRepositoryTest {
         FoodOrderingAppUserEntity mockedUserEntity = new FoodOrderingAppUserEntity();
         mockedUserEntity.setUsername("testUsername");
         when(foodOrderingAppUserJpaRepository.save(any(FoodOrderingAppUserEntity.class))).thenReturn(mockedUserEntity);
-        when(foodOrderingAppUserEntityMapper.mapToEntity(any(FoodOrderingAppUser.class))).thenReturn(mockedUserEntity); // Use the mapper mock
+        when(foodOrderingAppUserEntityMapper.mapToEntity(any(FoodOrderingAppUser.class))).thenReturn(mockedUserEntity);
 
         when(clientJpaRepository.save(any(ClientEntity.class))).thenReturn(clientEntity);
         when(clientEntityMapper.mapToEntity(any(Client.class))).thenReturn(clientEntity);
@@ -165,7 +165,7 @@ class ClientRepositoryTest {
     @Test
     void findOrdersByClientIdShouldReturnListOfOrders() {
         ClientEntity mockClientEntity = new ClientEntity();
-        mockClientEntity.setId(1L); // Ensure the client entity is properly identified
+        mockClientEntity.setId(1L);
         mockClientEntity.setFoodOrderEntities(foodOrderEntities);
 
         when(clientJpaRepository.findByUserId(1L)).thenReturn(Optional.of(mockClientEntity));
@@ -176,7 +176,7 @@ class ClientRepositoryTest {
         assertThat(orders).isNotNull().hasSize(1);
         FoodOrder retrievedOrder = orders.get(0);
         assertThat(retrievedOrder.getFoodOrderId()).isEqualTo(foodOrder.getFoodOrderId());
-        assertThat(retrievedOrder.getTotalPrice()).isEqualTo(foodOrder.getTotalPrice()); // Additional properties checks
+        assertThat(retrievedOrder.getTotalPrice()).isEqualTo(foodOrder.getTotalPrice());
         assertThat(retrievedOrder.getOrderTime()).isEqualTo(foodOrder.getOrderTime());
         assertThat(retrievedOrder.getFoodOrderStatus()).isEqualTo(foodOrder.getFoodOrderStatus());
     }

@@ -27,7 +27,6 @@ public class SecurityConfiguration {
     @SuppressWarnings("deprecation")
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Uwaga: używanie NoOpPasswordEncoder jest niezalecane i powinno być stosowane tylko w celach testowych
         return NoOpPasswordEncoder.getInstance();
     }
     @Bean

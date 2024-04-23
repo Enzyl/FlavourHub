@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = "deliveryId")
+@EqualsAndHashCode(of = {"deliveryId", "deliveryAddress", "deliveryTime","deliveryStatus"})
 @ToString(of = {"deliveryId", "deliveryAddress", "deliveryTime","deliveryStatus"})
 public class Delivery {
     Long deliveryId;

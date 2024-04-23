@@ -6,7 +6,7 @@ import java.util.Set;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = "menuId")
+@EqualsAndHashCode(of = {"menuId", "name", "description"})
 @ToString(of = {"menuId", "name", "description", "menuItems"})
 public class Menu {
     Long menuId;

@@ -25,8 +25,6 @@ public class RestaurantDeliveryStreetEntity {
     @Column(nullable = false, length = 255)
     private String district;
 
-    // Relationship to restaurant_delivery_area is not defined in the provided SQL
-    // Assuming OneToMany if multiple areas can reference the same street
     @OneToMany(mappedBy = "deliveryStreet",fetch = FetchType.LAZY)
     private Set<RestaurantDeliveryAreaEntity> deliveryAreas;
 }

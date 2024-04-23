@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = "paymentId")
+@EqualsAndHashCode(of = {"paymentId","paymentMethod","paymentStatus","paymentTime"})
 @ToString(of = {"paymentId", "paymentMethod", "paymentStatus","paymentTime"})
 public class Payment {
     Long paymentId;

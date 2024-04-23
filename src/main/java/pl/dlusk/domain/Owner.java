@@ -6,7 +6,7 @@ import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 @With
 @Value
 @Builder
-@EqualsAndHashCode(of = "ownerId")
+@EqualsAndHashCode(of = {"ownerId","name","nip"})
 @ToString(of = {"ownerId", "name", "surname", "phoneNumber","nip","regon"})
 public class Owner {
     Long ownerId;

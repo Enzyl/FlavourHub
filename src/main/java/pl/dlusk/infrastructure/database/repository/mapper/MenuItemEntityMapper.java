@@ -16,6 +16,6 @@ public interface MenuItemEntityMapper {
     MenuItem mapFromEntity(MenuItemEntity entity);
     @Mapping(source = "menuItemId", target = "id")
     @Mapping(source = "name", target = "name")
-    @Mapping(target = "menuEntity", ignore = true)  // Make sure to ignore the MenuEntity mapping if not handled
+    @Mapping(target = "menuEntity", ignore = true)
     MenuItemEntity mapToEntity(MenuItem menu);
 }
