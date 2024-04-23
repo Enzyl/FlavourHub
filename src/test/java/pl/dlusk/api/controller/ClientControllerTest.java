@@ -135,7 +135,6 @@ class ClientControllerTest {
         FoodOrderingAppUser user = new FoodOrderingAppUser();
         user.setUsername(expectedUsername);
 
-        // Setup the mock behavior for the directly created mock
         Mockito.when(mockSession.getAttribute("username")).thenReturn(expectedUsername);
         Mockito.when(clientService.getUserByUsername(expectedUsername)).thenReturn(user);
 
@@ -155,7 +154,7 @@ class ClientControllerTest {
         // Arrange
         FoodOrderingAppUser user = new FoodOrderingAppUser();
         user.setUsername("testUser");
-        Client client = Client.builder().build(); // Assume this class exists with appropriate fields
+        Client client = Client.builder().build();
 
         when(authentication.getPrincipal()).thenReturn(user);
         when(clientService.getClientByUsername("testUser")).thenReturn(client);
@@ -227,8 +226,8 @@ class ClientControllerTest {
 
         // Assert
         assertEquals("redirect:/confirmationPage", result);
-        verify(bindingResult).hasErrors(); // Check that hasErrors is called to confirm there are no errors
-        verify(session).setAttribute(eq("delivery"), any(Delivery.class)); // Verify that delivery object is set in session
+        verify(bindingResult).hasErrors();
+        verify(session).setAttribute(eq("delivery"), any(Delivery.class));
     }
 
 
@@ -315,7 +314,6 @@ class ClientControllerTest {
         when(session.getAttribute("uniqueFoodNumber")).thenReturn(uniqueFoodNumber);
         when(foodOrderService.showOrderSummary(uniqueFoodNumber)).thenReturn(foodOrder);
 
-        // debug output to help trace the values during the test execution
         System.out.println("Unique Food Number from session: " + session.getAttribute("uniqueFoodNumber"));
         System.out.println("Food Order from service: " + foodOrderService.showOrderSummary(uniqueFoodNumber));
 
@@ -347,7 +345,7 @@ class ClientControllerTest {
         // Arrange
         FoodOrderingAppUser user = new FoodOrderingAppUser();
         user.setUsername("testUser");
-        ClientOrderHistory clientOrderHistory = ClientOrderHistory.builder().build(); // Assume this is a valid object for your context
+        ClientOrderHistory clientOrderHistory = ClientOrderHistory.builder().build();
         when(session.getAttribute("user")).thenReturn(user);
         when(clientService.getClientOrderHistory("testUser")).thenReturn(clientOrderHistory);
 
@@ -407,7 +405,7 @@ class ClientControllerTest {
 
         // Assert
         assertEquals("redirect:/userOrders", viewName);
-        verify(foodOrderService, never()).updateFoodOrderStatus(eq(orderId), any()); // No update expected
+        verify(foodOrderService, never()).updateFoodOrderStatus(eq(orderId), any());
         verify(redirectAttributes).addFlashAttribute("errorMessage", "Order cannot be cancelled after 20 minutes.");
     }
 
