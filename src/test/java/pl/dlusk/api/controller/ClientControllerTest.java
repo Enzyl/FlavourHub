@@ -14,15 +14,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.dlusk.api.dto.DeliveryAddressFormDTO;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
+import pl.dlusk.business.UserService;
 import pl.dlusk.domain.*;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -31,6 +32,8 @@ class ClientControllerTest {
 
     @Mock
     private ClientService clientService;
+    @Mock
+    private UserService userService;
 
     @Mock
     private FoodOrderService foodOrderService;
@@ -66,9 +69,23 @@ class ClientControllerTest {
                 "fullName", "Test User",
                 "phoneNumber", "1234567890"
         );
-        Client client = Client.builder().build();
 
-        when(clientService.registerClient(any(Client.class), any(FoodOrderingAppUser.class))).thenReturn(client);
+        FoodOrderingAppUser user = FoodOrderingAppUser.builder()
+                .username(params.get("user.username"))
+                .password(params.get("user.password"))
+                .email(params.get("user.email"))
+                .enabled(Boolean.parseBoolean(params.get("user.enabled")))
+                .build();
+
+        Client client = Client.builder()
+                .fullName(params.get("fullName"))
+                .phoneNumber(params.get("phoneNumber"))
+                .user(user)
+                .build();
+
+        when(userService.createUserFromParams(params)).thenReturn(user);
+        when(clientService.createClientFromParams(params, user)).thenReturn(client);
+        when(clientService.registerClient(client, user)).thenReturn(client);
 
         // Act
         String viewName = clientController.registerClient(params, redirectAttributes);
@@ -76,7 +93,7 @@ class ClientControllerTest {
         // Assert
         assertEquals("redirect:/registrationSuccessView", viewName);
         verify(redirectAttributes).addFlashAttribute("registeredClient", client);
-        verify(clientService).registerClient(any(Client.class), any(FoodOrderingAppUser.class));
+        verify(clientService).registerClient(client, user);
     }
 
     @Test
@@ -90,8 +107,12 @@ class ClientControllerTest {
                 "fullName", "Existing User",
                 "phoneNumber", "1234567890"
         );
+        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        Client client = Client.builder().build();
 
-        when(clientService.registerClient(any(Client.class), any(FoodOrderingAppUser.class)))
+        when(userService.createUserFromParams(params)).thenReturn(user);
+        when(clientService.createClientFromParams(params, user)).thenReturn(client);
+        when(clientService.registerClient(client, user))
                 .thenThrow(new UsernameAlreadyExistsException("Username exists"));
 
         // Act
@@ -99,8 +120,8 @@ class ClientControllerTest {
 
         // Assert
         assertEquals("redirect:/registerClientForm", viewName);
-        verify(redirectAttributes).addFlashAttribute("errorMessage", "Username or email already exists.");
-        verify(clientService).registerClient(any(Client.class), any(FoodOrderingAppUser.class));
+        verify(redirectAttributes).addFlashAttribute(eq("errorMessage"), eq("Username or email already exists."));
+        verify(clientService).registerClient(client, user);
     }
 
     @Test
@@ -115,7 +136,13 @@ class ClientControllerTest {
                 "phoneNumber", "9876543210"
         );
 
-        when(clientService.registerClient(any(Client.class), any(FoodOrderingAppUser.class)))
+        FoodOrderingAppUser mockedUser = new FoodOrderingAppUser();
+        Client client = Client.builder().build();
+
+        when(userService.createUserFromParams(params)).thenReturn(mockedUser);
+        when(clientService.createClientFromParams(params, mockedUser)).thenReturn(client);
+
+        when(clientService.registerClient(client, mockedUser))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // Act
@@ -124,7 +151,7 @@ class ClientControllerTest {
         // Assert
         assertEquals("redirect:/registerClientForm", viewName);
         verify(redirectAttributes).addFlashAttribute("errorMessage", "Registration failed.");
-        verify(clientService).registerClient(any(Client.class), any(FoodOrderingAppUser.class));
+        verify(clientService).registerClient(client, mockedUser);
     }
 
     @Test
@@ -409,6 +436,78 @@ class ClientControllerTest {
         verify(redirectAttributes).addFlashAttribute("errorMessage", "Order cannot be cancelled after 20 minutes.");
     }
 
+    @Test
+    public void testCreateUserFromParams_withValidParams() {
+        Map<String, String> params = new HashMap<>();
+        params.put("user.username", "testUser");
+        params.put("user.password", "password123");
+        params.put("user.email", "test@example.com");
+        params.put("user.enabled", "true");
+        FoodOrderingAppUser expectedUser = FoodOrderingAppUser.builder()
+                .username("testUser")
+                .password("password123")
+                .email("test@example.com")
+                .enabled(true)
+                .role(Roles.CLIENT.toString())
+                .build();
 
+        when(userService.createUserFromParams(params)).thenReturn(expectedUser);
+
+        FoodOrderingAppUser user = userService.createUserFromParams(params);
+
+        assertEquals("testUser", user.getUsername());
+        assertEquals("password123", user.getPassword());
+        assertEquals("test@example.com", user.getEmail());
+        assertTrue(user.isEnabled());
+        assertEquals(Roles.CLIENT.toString(), user.getRole());
+    }
+
+    @Test
+    public void testCreateUserFromParams_withMissingParams() {
+        Map<String, String> params = new HashMap<>();
+        params.put("user.username", "testUser");
+        FoodOrderingAppUser expectedUser = FoodOrderingAppUser.builder()
+                .username("testUser")
+                .password(null)
+                .email(null)
+                .enabled(false)
+                .role(Roles.CLIENT.toString())
+                .build();
+
+        when(userService.createUserFromParams(params)).thenReturn(expectedUser);
+        FoodOrderingAppUser user = userService.createUserFromParams(params);
+
+        assertEquals("testUser", user.getUsername());
+        assertNull(user.getPassword());
+        assertNull(user.getEmail());
+        assertFalse(user.isEnabled());
+    }
+
+    @Test
+    public void testCreateClientFromParams_withValidParams() {
+        Map<String, String> params = new HashMap<>();
+        params.put("fullName", "John Doe");
+        params.put("phoneNumber", "1234567890");
+        FoodOrderingAppUser expectedUser = FoodOrderingAppUser.builder()
+                .username("testUser")
+                .password(null)
+                .email(null)
+                .enabled(false)
+                .role(Roles.CLIENT.toString())
+                .build();
+
+        Client expectedClient = Client.builder()
+                .fullName("John Doe")
+                .phoneNumber("1234567890")
+                .user(expectedUser)
+                .build();
+        when(clientService.createClientFromParams(params,expectedUser)).thenReturn(expectedClient);
+
+        Client client = clientService.createClientFromParams(params, expectedUser);
+
+        assertEquals("John Doe", client.getFullName());
+        assertEquals("1234567890", client.getPhoneNumber());
+        assertEquals(expectedUser, client.getUser());
+    }
 
 }

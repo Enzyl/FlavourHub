@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,16 +15,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.dlusk.api.dto.DeliveryAddressFormDTO;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
+import pl.dlusk.business.UserService;
 import pl.dlusk.domain.*;
-import pl.dlusk.domain.shoppingCart.ShoppingCart;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,13 +32,14 @@ public class ClientController {
 
     private final ClientService clientService;
      private final FoodOrderService foodOrderService;
+     private final UserService userService;
 
     @PostMapping("/registerClient")
     public String registerClient(@RequestParam Map<String, String> params, RedirectAttributes redirectAttributes) {
         try {
             log.info("Starting client registration");
-            FoodOrderingAppUser user = createUserFromParams(params);
-            Client client = createClientFromParams(params, user);
+            FoodOrderingAppUser user = userService.createUserFromParams(params);
+            Client client = clientService.createClientFromParams(params, user);
 
             Client registeredClient = clientService.registerClient(client, user);
             redirectAttributes.addFlashAttribute("registeredClient", registeredClient);
@@ -200,21 +197,4 @@ public class ClientController {
         return "redirect:/userOrders";
     }
 
-    private FoodOrderingAppUser createUserFromParams(Map<String, String> params) {
-        return FoodOrderingAppUser.builder()
-                .username(params.get("user.username"))
-                .password(params.get("user.password"))
-                .email(params.get("user.email"))
-                .role(Roles.CLIENT.toString())
-                .enabled(Boolean.parseBoolean(params.get("user.enabled")))
-                .build();
-    }
-
-    private Client createClientFromParams(Map<String, String> params, FoodOrderingAppUser user) {
-        return Client.builder()
-                .fullName(params.get("fullName"))
-                .phoneNumber(params.get("phoneNumber"))
-                .user(user)
-                .build();
-    }
 }

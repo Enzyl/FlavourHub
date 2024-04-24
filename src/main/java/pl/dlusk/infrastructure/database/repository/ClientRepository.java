@@ -55,13 +55,18 @@ public class ClientRepository implements ClientDAO {
 
         FoodOrderingAppUserEntity userEntity = foodOrderingAppUserEntityMapper.mapToEntity(user);
         FoodOrderingAppUserEntity savedUserEntity = foodOrderingAppUserJpaRepository.save(userEntity);
+        log.info("########## ClientRepository #### save #  userEntity {} ",userEntity );
+        log.info("########## ClientRepository #### save #  userEntity {}",savedUserEntity );
 
         ClientEntity clientEntity = clientEntityMapper.mapToEntity(client);
+        log.info("########## ClientRepository #### save #  clientEntity {}",clientEntity );
 
         clientEntity.setUser(savedUserEntity);
+        log.info("########## ClientRepository #### save #  clientEntity.setUser(savedUserEntity); {}",clientEntity );
 
         ClientEntity savedNewClient = clientJpaRepository.save(clientEntity);
 
+        log.info("########## ClientRepository #### save #  savedNewClient: {} ",savedNewClient );
 
         return clientEntityMapper.mapFromEntity(savedNewClient).withUser(user);
     }

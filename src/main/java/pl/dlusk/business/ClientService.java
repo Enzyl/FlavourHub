@@ -14,6 +14,7 @@ import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -95,7 +96,13 @@ public class ClientService {
         return user;
     }
 
-
+    public Client createClientFromParams(Map<String, String> params, FoodOrderingAppUser user) {
+        return Client.builder()
+                .fullName(params.get("fullName"))
+                .phoneNumber(params.get("phoneNumber"))
+                .user(user)
+                .build();
+    }
 
 
 
