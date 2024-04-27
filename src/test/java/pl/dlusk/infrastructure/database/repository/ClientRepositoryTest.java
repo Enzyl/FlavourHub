@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.FoodOrder;
 import pl.dlusk.domain.FoodOrderStatus;
+import pl.dlusk.domain.Roles;
 import pl.dlusk.infrastructure.database.entity.ClientEntity;
 import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.ClientJpaRepository;
@@ -24,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
@@ -96,30 +99,52 @@ class ClientRepositoryTest {
 
     @Test
     void saveShouldPersistClient() {
-        FoodOrderingAppUser mockedUser = mock(FoodOrderingAppUser.class);
-        when(mockedUser.getUsername()).thenReturn("testUsername");
 
-        FoodOrderingAppUserEntity mockedUserEntity = new FoodOrderingAppUserEntity();
-        mockedUserEntity.setUsername("testUsername");
-        when(foodOrderingAppUserJpaRepository.save(any(FoodOrderingAppUserEntity.class))).thenReturn(mockedUserEntity);
-        when(foodOrderingAppUserEntityMapper.mapToEntity(any(FoodOrderingAppUser.class))).thenReturn(mockedUserEntity);
+        FoodOrderingAppUser user = FoodOrderingAppUser.builder()
+                .username("testUsername")
+                .password("testPassword")
+                .email("testEmail")
+                .enabled(true)
+                .role(Roles.CLIENT.toString())
+                .build();
+        // Arrange
+        Client client = Client.builder()
+                .clientId(null)
+                .fullName("John Doe")
+                .phoneNumber("999888777")
+                .user(user)
+                .build();
 
-        when(clientJpaRepository.save(any(ClientEntity.class))).thenReturn(clientEntity);
+        FoodOrderingAppUserEntity userEntity = new FoodOrderingAppUserEntity();
+        userEntity.setUsername(user.getUsername());
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setFullName(client.getFullName());
+        clientEntity.setPhoneNumber(client.getPhoneNumber());
+        clientEntity.setUser(userEntity);
+
+        when(foodOrderingAppUserJpaRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
+        when(clientJpaRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
+        when(foodOrderingAppUserEntityMapper.mapToEntity(any(FoodOrderingAppUser.class))).thenReturn(userEntity);
+        when(foodOrderingAppUserJpaRepository.save(userEntity)).thenReturn(userEntity);
         when(clientEntityMapper.mapToEntity(any(Client.class))).thenReturn(clientEntity);
+        when(clientJpaRepository.save(clientEntity)).thenReturn(clientEntity);
         when(clientEntityMapper.mapFromEntity(clientEntity)).thenReturn(client);
 
-        Client savedClient = clientRepository.save(client, mockedUser);
+        // Act
+        Client savedClient = clientRepository.save(client);
 
-        assertThat(savedClient).isNotNull();
-        assertThat(savedClient.getClientId()).isEqualTo(client.getClientId());
-        assertThat(savedClient.getFullName()).isEqualTo(client.getFullName());
-        assertThat(savedClient.getPhoneNumber()).isEqualTo(client.getPhoneNumber());
-
-        verify(clientJpaRepository).save(any(ClientEntity.class));
-        verify(clientEntityMapper).mapToEntity(any(Client.class));
+        // Assert
+        assertNotNull(savedClient);
+        assertEquals(client.getFullName(), savedClient.getFullName());
+        assertEquals(client.getPhoneNumber(), savedClient.getPhoneNumber());
+        verify(foodOrderingAppUserJpaRepository).findByUsername(user.getUsername());
+        verify(clientJpaRepository).findByUsername(user.getUsername());
+        verify(clientJpaRepository).save(clientEntity);
+        verify(clientEntityMapper).mapToEntity(client);
         verify(clientEntityMapper).mapFromEntity(clientEntity);
-        verify(foodOrderingAppUserJpaRepository).save(any(FoodOrderingAppUserEntity.class));
+        verify(foodOrderingAppUserJpaRepository).save(userEntity);
     }
+
 
     @Test
     void findAllShouldReturnAllClients() {

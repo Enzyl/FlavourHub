@@ -9,11 +9,10 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import pl.dlusk.api.dto.OwnerDTO;
+import pl.dlusk.api.dto.mapper.OwnerDTOMapper;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.OwnerService;
 import pl.dlusk.business.RestaurantService;
@@ -31,21 +30,17 @@ public class OwnerController {
     private final OwnerService ownerService;
     private final RestaurantService restaurantService;
     private final FoodOrderService foodOrderService;
-
+    private final OwnerDTOMapper ownerDTOMapper;
 
     @PostMapping("/registerOwner")
-    public String registerOwner(@RequestParam("name") String name,
-                                @RequestParam("surname") String surname,
-                                @RequestParam("phoneNumber") String phoneNumber,
-                                @RequestParam("nip") String nip,
-                                @RequestParam("regon") String regon,
-                                @RequestParam("user.username") String username,
-                                @RequestParam("user.email") String email,
-                                @RequestParam("user.password") String password,
-                                @RequestParam("user.enabled") boolean enabled,
+    public String registerOwner(@ModelAttribute OwnerDTO ownerDTO,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
-        Owner owner = createOwner(name, surname, phoneNumber, nip, regon, username, password, email, enabled);
+
+        Owner owner = ownerDTOMapper.mapFromDTO(ownerDTO);
+        log.info("########## OwnerController #### registerOwner ### owner: " + owner);
+        log.info("########## OwnerController #### registerOwner ### user: " + owner.getUser());
+
         session.setAttribute("owner", owner);
 
         try {
@@ -99,92 +94,4 @@ public class OwnerController {
     }
 
 
-
-    @PostMapping("/updateFoodOrderStatusToDelivery/{orderId}")
-    public String updateFoodOrderStatusToDelivery(@PathVariable Long orderId, HttpSession session) {
-        foodOrderService.updateFoodOrderStatus(orderId, FoodOrderStatus.DELIVERED.toString());
-        log.info("Order with id {} status updated to Delivery.", orderId);
-        return "redirect:/showOrdersInProgress";
-    }
-    @GetMapping("/showFinishedOrders")
-    public String showFinishedOrders(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        SecurityContext context = SecurityContextHolder.getContext();
-
-        log.info("Fetching restaurant for user {}", username);
-        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
-
-        if (restaurant == null) {
-            log.warn("No restaurant found for username: {}", username);
-            return "redirect:/showRestaurantRegistrationForm";
-        }
-
-        List<FoodOrder> finishedFoodOrders = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId()
-        ,FoodOrderStatus.DELIVERED.toString());
-        model.addAttribute("finishedFoodOrders", finishedFoodOrders);
-
-        log.debug("Finished orders for restaurant ID {}: {}", restaurant.getRestaurantId(), finishedFoodOrders.size());
-        return "finishedOrdersView";
-    }
-
-    @GetMapping("/showOrdersInProgress")
-    public String showOrdersInProgress(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        log.debug("Fetching restaurant for user {}", username);
-        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
-        if (restaurant == null) {
-            log.warn("No restaurant found for username: {}", username);
-            return "redirect:/showRestaurantRegistrationForm";
-        }
-
-        List<FoodOrder> foodOrdersInProgress = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId(), FoodOrderStatus.CONFIRMED.toString());
-
-        List<FoodOrder> fooOrdersInProgressWithRestaurant = getFoodOrders(foodOrdersInProgress, restaurant);
-
-        model.addAttribute("foodOrdersInProgress", fooOrdersInProgressWithRestaurant);
-        log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH foodOrdersInProgress {}",
-                fooOrdersInProgressWithRestaurant);
-        return "foodOrdersForRestaurantInProgressView";
-    }
-
-    private List<FoodOrder> getFoodOrders(List<FoodOrder> foodOrdersInProgress, Restaurant restaurant) {
-        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrdersInProgress.stream().map(
-                foodOrder -> {
-                    Long foodOrderId = foodOrder.getFoodOrderId();
-                    Set<OrderItem> orderItemsByFoodOrderId = foodOrderService.findOrderItemsByFoodOrderId(foodOrderId);
-                    return foodOrder.withOrderItems(orderItemsByFoodOrderId)
-                            .withRestaurant(restaurant);
-                }
-        ).toList();
-        return fooOrdersInProgressWithRestaurant;
-    }
-
-
-    private Owner createOwner(String name, String surname, String phoneNumber, String nip, String regon,
-                              String username, String password, String email, boolean enabled) {
-
-        FoodOrderingAppUser user = createUser(username, password, email, enabled);
-
-        return Owner.builder()
-                .name(name)
-                .surname(surname)
-                .phoneNumber(phoneNumber)
-                .nip(nip)
-                .regon(regon)
-                .user(user)
-                .build();
-    }
-
-    private FoodOrderingAppUser createUser(String username, String password, String email, boolean enabled) {
-        return FoodOrderingAppUser.builder()
-                .username(username)
-                .password(password)
-                .email(email)
-                .role(Roles.OWNER.toString())
-                .enabled(enabled)
-                .build();
-    }
 }

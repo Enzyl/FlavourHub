@@ -10,10 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.ui.Model;
+import pl.dlusk.api.dto.ClientDTO;
+import pl.dlusk.api.dto.OwnerDTO;
 import pl.dlusk.business.RestaurantService;
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
+import pl.dlusk.domain.Roles;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,16 +69,35 @@ class HomeControllerTest {
     @Test
     void testShowRegisterForms() {
         // Arrange
-        FoodOrderingAppUser defaultUser = FoodOrderingAppUser.builder()
-                .username("")
-                .password("")
-                .email("")
-                .role("")
-                .enabled(true)
+        OwnerDTO ownerDTO = OwnerDTO.builder()
+                .name("")
+                .surname("")
+                .phoneNumber("")
+                .nip("")
+                .regon("")
+                .userDTO(
+                        OwnerDTO.UserDTO.builder()
+                                .username("")
+                                .password("")
+                                .email("")
+                                .enabled(true)
+                                .role(Roles.OWNER.toString())
+                                .build())
                 .build();
 
-        Client client = Client.builder().fullName("").phoneNumber("").foodOrders(null).user(defaultUser).build();
-        Owner owner = Owner.builder().surname("").phoneNumber("").nip("").regon("").user(defaultUser).build();
+        ClientDTO clientDTO = ClientDTO.builder()
+                .fullName("")
+                .phoneNumber("")
+                .userDTO(
+                        ClientDTO.UserDTO.builder()
+                                .username("")
+                                .password("")
+                                .email("")
+                                .enabled(true)
+                                .role(Roles.CLIENT.toString())
+                                .build())
+                .build();
+
 
         // Act
         String returnedView = homeController.showRegisterForms(session, model);
@@ -83,10 +105,9 @@ class HomeControllerTest {
         // Assert
         assertEquals("clientOwnerRegistration", returnedView, "The returned view should be 'clientOwnerRegistration'.");
 
-        verify(model).addAttribute("client", client);
-        verify(model).addAttribute("owner", owner);
-        verify(session).setAttribute("defaultUser", defaultUser);
-        verify(session).setAttribute("owner", owner);
-        verify(session).setAttribute("client", client);
+        verify(model).addAttribute("client", clientDTO);
+        verify(model).addAttribute("owner", ownerDTO);
+        verify(session).setAttribute("owner", ownerDTO);
+        verify(session).setAttribute("client", clientDTO);
     }
 }

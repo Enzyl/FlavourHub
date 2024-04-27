@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -14,6 +17,8 @@ import pl.dlusk.api.dto.DeliveryStreetDTO;
 import pl.dlusk.api.dto.MenuDTO;
 import pl.dlusk.api.dto.MenuItemDTO;
 import pl.dlusk.api.dto.RestaurantRegistrationDTO;
+import pl.dlusk.api.dto.mapper.MenuDTOMapper;
+import pl.dlusk.api.dto.mapper.MenuItemDTOMapper;
 import pl.dlusk.business.*;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
@@ -33,6 +38,10 @@ public class RestaurantController {
     private final OwnerService ownerService;
     private final PaymentService paymentService;
     private final ShoppingCartService shoppingCartService;
+    private final FoodOrderService foodOrderService;
+    private final MenuItemDTOMapper menuItemDTOMapper;
+    private final MenuDTOMapper menuDTOMapper;
+    private final UtilService utilService;
 
     @GetMapping("/restaurantMenu/{restaurantId}")
     public String showRestaurantMenu(@PathVariable Long restaurantId, Model model, HttpSession session) {
@@ -43,7 +52,9 @@ public class RestaurantController {
 
         try {
             Menu menu = restaurantService.getMenuForRestaurantWithMenuItems(restaurantId);
-            updateModelWithMenuDetails(model, shoppingCart, restaurantId, menu, session);
+            log.info("menu found from restaurantService.getMenuForRestaurantWithMenuItems(restaurantId): {}", menu);
+            utilService.updateModelWithMenuDetails(model, shoppingCart, restaurantId, menu, session);
+            log.info("model, shoppingCart, restaurantId, menu, session: {} {} {} {} {}", model, shoppingCart, restaurantId, menu, session);
             return "restaurantMenu";
         } catch (Exception e) {
             log.error("Failed to load menu for restaurant ID {}: {}", restaurantId, e.getMessage());
@@ -73,6 +84,11 @@ public class RestaurantController {
     @PostMapping("/updateCartItem")
     public String updateCartItem(@RequestParam("menuItemId") Long menuItemId, @RequestParam("quantity") int quantity, HttpSession session) {
         ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
+        if (shoppingCart == null) {
+            // If no cart found, redirect to an error page or home page with a flash message
+            return "errorPage"; // Replace "someErrorPage" with the actual error handling page
+        }
+
         MenuItem menuItem = restaurantService.getMenuItemById(menuItemId);
 
         if (quantity > 0) {
@@ -88,11 +104,11 @@ public class RestaurantController {
     @GetMapping("/showRestaurantRegistrationForm")
     public String showRegisterRestaurantForm(Model model) {
         RestaurantRegistrationDTO restaurantDTO = new RestaurantRegistrationDTO();
-        restaurantDTO.setAddress(new RestaurantRegistrationDTO.AddressDTO()); // Ustawienie pustych domyślnych wartości
+        restaurantDTO.setAddress(new RestaurantRegistrationDTO.AddressDTO());
         model.addAttribute("restaurant", restaurantDTO);
         return "restaurantRegistrationView";
     }
-
+// TODO: Write test for this method but later, i get error with CloudinaryService
     @PostMapping("/registerRestaurant")
     public String registerRestaurant(
             @Valid @ModelAttribute("restaurant") RestaurantRegistrationDTO restaurantDTO,
@@ -108,7 +124,7 @@ public class RestaurantController {
             return "restaurantRegistrationView";  // Return to the form on errors
         }
 
-        String imageUrl = uploadImageAndRetrieveUrl(image);
+        String imageUrl = cloudinaryService.uploadImageAndGetUrl(image);
 
 
         Owner owner = ownerService.getAuthenticatedOwner(session);
@@ -170,13 +186,13 @@ public class RestaurantController {
     public String showAddMenuToTheRestaurantView(HttpSession session, Model model) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
-            return "redirect:/login";  // Ensure the user is logged in
+            return "redirect:/login";
         }
 
         Owner owner = ownerService.getByUsername(username);
         if (owner == null) {
             model.addAttribute("error", "Owner not found.");
-            return "errorPage";  // Proper error handling
+            return "errorPage";
         }
 
         Restaurant restaurant = ownerService.getRestaurantByOwnerId(owner.getOwnerId());
@@ -207,11 +223,12 @@ public class RestaurantController {
         Restaurant restaurant = restaurantService.getCurrentRestaurant(session);
 
         if (restaurant == null) {
+            log.info("restaurant for addMenuToTheRestaurant was null");
             redirectAttributes.addFlashAttribute("errorMessage", "No associated restaurant found.");
             return "redirect:/showRestaurantRegistrationForm";
         }
 
-        Menu menu = convertToMenu(menuDTO, restaurant);
+        Menu menu = menuDTOMapper.convertToMenu(menuDTO, restaurant);
         Menu savedMenu = restaurantService.addMenu(menu);
         log.info("Menu added: {}", savedMenu);
 
@@ -227,12 +244,14 @@ public class RestaurantController {
         Restaurant restaurant = restaurantService.getOrCreateRestaurant(session);
         Menu menu = restaurantService.getOrCreateMenu(session, restaurant);
 
-        updateSessionAttributes(session, menu, restaurant);
-        addModelAttributes(model, session);
+        utilService.updateSessionAttributes(session, menu, restaurant);
+        utilService.addModelAttributes(model, session);
 
         return "addingMenuItemsToTheMenu";
     }
 
+
+    // TODO: Create test for this method. Problem with CloudinaryService
     @PostMapping("/addMenuItemToMenu")
     public String addMenuItemToMenu(@ModelAttribute("menuItem") MenuItemDTO menuItemDTO,
                                     BindingResult result,
@@ -244,9 +263,9 @@ public class RestaurantController {
         }
 
         Menu menu = (Menu) session.getAttribute("menuToUpdate");
-        Set<MenuItem> menuItems = getMenuItemsFromSession(session);
+        Set<MenuItem> menuItems = utilService.getMenuItemsFromSession(session);
         String imageUrl = cloudinaryService.uploadImageAndGetUrl(menuItemDTO.getImage());
-        MenuItem menuItem = convertDTOToMenuItem(menuItemDTO, imageUrl, menu);
+        MenuItem menuItem = menuItemDTOMapper.convertDTOToMenuItem(menuItemDTO, imageUrl, menu);
 
         log.debug("Adding menu item to session: {}", menuItem);
         menuItems.add(menuItem);
@@ -279,6 +298,57 @@ public class RestaurantController {
         return "redirect:/showOwnerLoggedInView";
     }
 
+    @PostMapping("/updateFoodOrderStatusToDelivery/{orderId}")
+    public String updateFoodOrderStatusToDelivery(@PathVariable Long orderId, HttpSession session) {
+        foodOrderService.updateFoodOrderStatus(orderId, FoodOrderStatus.DELIVERED.toString());
+        log.info("Order with id {} status updated to Delivery.", orderId);
+        return "redirect:/showOrdersInProgress";
+    }
+
+    @GetMapping("/showFinishedOrders")
+    public String showFinishedOrders(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        log.info("Fetching restaurant for user {}", username);
+        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
+
+        if (restaurant == null) {
+            log.warn("No restaurant found for username: {}", username);
+            return "redirect:/showRestaurantRegistrationForm";
+        }
+
+        List<FoodOrder> finishedFoodOrders = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId()
+                ,FoodOrderStatus.DELIVERED.toString());
+        model.addAttribute("finishedFoodOrders", finishedFoodOrders);
+
+        log.debug("Finished orders for restaurant ID {}: {}", restaurant.getRestaurantId(), finishedFoodOrders.size());
+        return "finishedOrdersView";
+    }
+
+    @GetMapping("/showOrdersInProgress")
+    public String showOrdersInProgress(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        log.debug("Fetching restaurant for user {}", username);
+        Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
+        if (restaurant == null) {
+            log.warn("No restaurant found for username: {}", username);
+            return "redirect:/showRestaurantRegistrationForm";
+        }
+
+        List<FoodOrder> foodOrdersInProgress = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId(), FoodOrderStatus.CONFIRMED.toString());
+
+        List<FoodOrder> fooOrdersInProgressWithRestaurant = utilService.getFoodOrders(foodOrdersInProgress, restaurant);
+
+        model.addAttribute("foodOrdersInProgress", fooOrdersInProgressWithRestaurant);
+        log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH foodOrdersInProgress {}",
+                fooOrdersInProgressWithRestaurant);
+        return "foodOrdersForRestaurantInProgressView";
+    }
+
+
     @GetMapping("/changeMenu")
     public String changeMenu(HttpSession session) {
         Menu menu = (Menu) session.getAttribute("menu");
@@ -297,80 +367,6 @@ public class RestaurantController {
         return "redirect:/showAddMenuToTheRestaurantView";
     }
 
-    private Menu getMenuForRestaurantWithMenuItems(Long restaurantId) throws Exception {
 
-        Menu menu = restaurantService.getMenuRestaurantById(restaurantId);
-        if (menu == null) {
-            throw new Exception("Menu not found for restaurantId: " + restaurantId);
-        }
-        Set<MenuItem> menuItems = restaurantService.getMenuItemsByMenuId(menu);
-        return menu.withMenuItems(menuItems == null ? new HashSet<>() : menuItems);
-    }
 
-    private void updateModelWithMenuDetails(Model model, ShoppingCart shoppingCart, Long restaurantId, Menu menu, HttpSession session) {
-        BigDecimal totalValue = paymentService.calculateTotalValue(shoppingCart);
-        model.addAttribute("menu", menu);
-        model.addAttribute("shoppingCart", shoppingCart);
-        model.addAttribute("restaurantId", restaurantId);
-        model.addAttribute("totalValue", totalValue);
-        session.setAttribute("totalValue", totalValue);
-        session.setAttribute("restaurantId", restaurantId);
-    }
-
-    private String uploadImageAndRetrieveUrl(MultipartFile image) throws IOException {
-        Map uploadResult = cloudinaryService.uploadImage(image);
-        return (String) uploadResult.get("url");
-    }
-
-    private Menu convertToMenu(MenuDTO menuDTO, Restaurant restaurant) {
-        return Menu.builder()
-                .name(menuDTO.getName())
-                .description(menuDTO.getDescription())
-                .restaurant(restaurant)
-                .build();
-    }
-
-    private void updateSessionAttributes(HttpSession session, Menu menu, Restaurant restaurant) {
-        Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
-        if (menuItems == null) {
-            menuItems = new HashSet<>();
-        }
-        session.setAttribute("menuItems", menuItems);
-        session.setAttribute("menuToUpdate", menu);
-        session.setAttribute("restaurant", restaurant);
-    }
-
-    private void addModelAttributes(Model model, HttpSession session) {
-        Map<String, List<MenuItem>> groupedMenuItems = groupMenuItemsByCategory(session);
-        model.addAttribute("menu", session.getAttribute("menuToUpdate"));
-        model.addAttribute("groupedMenuItems", groupedMenuItems);
-    }
-
-    private Map<String, List<MenuItem>> groupMenuItemsByCategory(HttpSession session) {
-        Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
-        if (menuItems == null || menuItems.isEmpty()) {
-            return new HashMap<>();
-        }
-        return menuItems.stream()
-                .collect(Collectors.groupingBy(MenuItem::getCategory));
-    }
-
-    private Set<MenuItem> getMenuItemsFromSession(HttpSession session) {
-        Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
-        if (menuItems == null) {
-            return new HashSet<>();
-        }
-        return menuItems;
-    }
-
-    private MenuItem convertDTOToMenuItem(MenuItemDTO dto, String imageUrl, Menu menu) {
-        return MenuItem.builder()
-                .name(dto.getName())
-                .description(dto.getDescription())
-                .price(dto.getPrice())
-                .category(dto.getCategory())
-                .imagePath(imageUrl)
-                .menu(menu)
-                .build();
-    }
 }

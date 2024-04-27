@@ -31,4 +31,6 @@ public class BeanConfiguration {
                 "api_secret", "i4M19XeaMnIDUqNRuC5wa6rMnxw",
                 "secure", true));
     }
+
+
 }

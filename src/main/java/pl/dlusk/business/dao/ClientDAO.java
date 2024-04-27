@@ -9,7 +9,7 @@ import java.util.List;
 public interface ClientDAO {
     List<FoodOrder> findOrdersByClientId(Long clientId);
 
-    Client save(Client client, FoodOrderingAppUser user); // Zapisuje lub aktualizuje klienta.
+    Client save(Client client); // Zapisuje lub aktualizuje klienta.
 
     Client findByUserId(Long id); // Znajduje klienta po ID usera.
 

@@ -44,12 +44,10 @@ class PaymentControllerTest {
         // Assert
         assertEquals("redirect:/processOrder", viewName, "Redirection should go to the process order page.");
 
-        // Use a custom argument captor to capture the Payment object and verify it
         ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
         verify(session).setAttribute(eq("payment"), paymentCaptor.capture());
         verify(session).getAttribute("totalValue");
 
-        // Additional assertions to validate the Payment object if necessary
         Payment capturedPayment = paymentCaptor.getValue();
         assertNotNull(capturedPayment);
         assertEquals("Blik", capturedPayment.getPaymentMethod());

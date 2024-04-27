@@ -58,13 +58,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
 
     // Integration tests
     // Ta zależność musi być przed wiremock standalone
     testImplementation "org.slf4j:slf4j-api:${wiremockSlf4jVersion}"
     testImplementation "com.github.tomakehurst:wiremock-standalone:${wiremockVersion}"
     testImplementation "io.rest-assured:rest-assured:${restAssuredVersion}"
-
 
     //For Gradle, add to dependencies section of build.gradle
     compileOnly group: 'com.cloudinary', name: 'cloudinary-http44', version: '1.26.0'

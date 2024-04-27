@@ -10,10 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import pl.dlusk.api.dto.ClientDTO;
+import pl.dlusk.api.dto.OwnerDTO;
 import pl.dlusk.business.RestaurantService;
 import pl.dlusk.domain.Client;
-import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
+import pl.dlusk.domain.Roles;
 import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 @Slf4j
 @Controller
@@ -54,24 +56,41 @@ public class HomeController {
     @GetMapping("/registration")
     public String showRegisterForms(HttpSession session, Model model) {
         log.info("########## HomeController #### showRegisterForms #  START");
-        FoodOrderingAppUser defaultUser = FoodOrderingAppUser.builder()
-                .username("")
-                .password("")
-                .email("")
-                .role("")
-                .enabled(true)
+
+        OwnerDTO ownerDTO = OwnerDTO.builder()
+                .name("")
+                .surname("")
+                .phoneNumber("")
+                .nip("")
+                .regon("")
+                .userDTO(
+                        OwnerDTO.UserDTO.builder()
+                                .username("")
+                                .password("")
+                                .email("")
+                                .enabled(true)
+                                .role(Roles.OWNER.toString())
+                                .build())
                 .build();
 
-        Client client = Client.builder().fullName("").phoneNumber("").foodOrders(null).user(defaultUser).build();
+        ClientDTO clientDTO = ClientDTO.builder()
+                .fullName("")
+                .phoneNumber("")
+                .userDTO(
+                        ClientDTO.UserDTO.builder()
+                                .username("")
+                                .password("")
+                                .email("")
+                                .enabled(true)
+                                .role(Roles.CLIENT.toString())
+                                .build())
+                .build();
 
-        Owner owner = Owner.builder().surname("").phoneNumber("").nip("").regon("").user(defaultUser).build();
+        model.addAttribute("client", clientDTO);
+        model.addAttribute("owner", ownerDTO);
 
-        model.addAttribute("client", client);
-        model.addAttribute("owner", owner);
-
-        session.setAttribute("defaultUser", defaultUser);
-        session.setAttribute("owner", owner);
-        session.setAttribute("client", client);
+        session.setAttribute("owner", ownerDTO);
+        session.setAttribute("client", clientDTO);
 
 
         log.info("########## HomeController #### showRegisterForms #  FINISH");

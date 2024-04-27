@@ -37,7 +37,7 @@
                     <p>Amount: <span th:text="${order.payment.paymentAmount}">Payment Amount</span> PLN</p>
                 </div>
             </div>
-            <div th:if="${order.foodOrderStatus == 'Confirmed' and order.isCancellable()}" class="card-footer">
+            <div th:if="${order.foodOrderStatus == 'CONFIRMED' and order.isCancellable()}" class="card-footer">
                 <form th:action="@{/cancelOrder}" method="post">
                     <input type="hidden" name="orderId" th:value="${order.orderId}" />
                     <button type="submit" class="btn btn-warning">Anuluj zamówienie</button>

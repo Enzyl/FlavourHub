@@ -3,6 +3,7 @@ package pl.dlusk.business;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,14 +16,14 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class CloudinaryService {
+@AllArgsConstructor
 
-    private final Cloudinary cloudinary;
 
-    public CloudinaryService(Cloudinary cloudinary) {
-        this.cloudinary = cloudinary;
-    }
+public class CloudinaryService implements CloudinaryClient{
 
+    private  Cloudinary cloudinary;
+
+@Override
     public String uploadImageAndGetUrl(MultipartFile image) throws IOException {
         Map uploadResult = uploadImage(image);
         return (String) uploadResult.get("url");
@@ -55,7 +56,7 @@ public class CloudinaryService {
             throw new IOException("Cloudinary upload failed", e);
         }
     }
-
+@Override
     public boolean deleteImage(String url) throws IOException {
         if (url == null || url.isEmpty()) {
             log.error("Public ID is null or empty, cannot delete image.");

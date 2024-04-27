@@ -1,9 +1,6 @@
 package pl.dlusk.domain.shoppingCart;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.With;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import pl.dlusk.domain.MenuItem;
 
@@ -15,6 +12,7 @@ import java.util.Map;
 @Setter
 @Builder
 @With
+@ToString(of = {"items"})
 public class ShoppingCart {
     private Long restaurantId;
     private Long userId;

@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import pl.dlusk.api.dto.ClientDTO;
 import pl.dlusk.api.dto.DeliveryAddressFormDTO;
+import pl.dlusk.api.dto.mapper.ClientDTOMapper;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.UserService;
@@ -33,15 +35,13 @@ public class ClientController {
     private final ClientService clientService;
      private final FoodOrderService foodOrderService;
      private final UserService userService;
-
+    private final ClientDTOMapper clientDTOMapper;
     @PostMapping("/registerClient")
-    public String registerClient(@RequestParam Map<String, String> params, RedirectAttributes redirectAttributes) {
+    public String registerClient(@ModelAttribute ClientDTO clientDTO, RedirectAttributes redirectAttributes) {
         try {
             log.info("Starting client registration");
-            FoodOrderingAppUser user = userService.createUserFromParams(params);
-            Client client = clientService.createClientFromParams(params, user);
-
-            Client registeredClient = clientService.registerClient(client, user);
+            Client client = clientDTOMapper.mapFromDTO(clientDTO);
+            Client registeredClient = clientService.registerClient(client);
             redirectAttributes.addFlashAttribute("registeredClient", registeredClient);
             log.info("Client registration successful: {}", registeredClient);
             return "redirect:/registrationSuccessView";
@@ -50,7 +50,7 @@ public class ClientController {
             redirectAttributes.addFlashAttribute("errorMessage", "Username or email already exists.");
             return "redirect:/registerClientForm";
         } catch (Exception e) {
-            log.error("Registration failed for user: {}", params.get("user.username"), e);
+            log.error("Registration failed for user: {}", clientDTO.getUserDTO().getUsername(), e);
             redirectAttributes.addFlashAttribute("errorMessage", "Registration failed.");
             return "redirect:/registerClientForm";
         }

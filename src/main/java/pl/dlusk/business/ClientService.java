@@ -34,8 +34,8 @@ public class ClientService {
     private final FoodOrderService foodOrderService;
 
     @Transactional
-    public Client registerClient(Client client, FoodOrderingAppUser user) {
-        return clientDAO.save(client, user);
+    public Client registerClient(Client client) {
+        return clientDAO.save(client);
     }
 
 
@@ -52,11 +52,10 @@ public class ClientService {
                     log.info("########## ClientService #### getClientOrderHistory #  foodOrderId:" + foodOrder.getFoodOrderId() + " orderItems: " + orderItems);
                     return convertToFoodOrderRequest(foodOrder, orderItems);
                 })
-                .sorted((o1, o2) -> o2.getOrderTime().compareTo(o1.getOrderTime())) // Dodanie sortowania malejącego
+                .sorted((o1, o2) -> o2.getOrderTime().compareTo(o1.getOrderTime()))
                 .collect(Collectors.toList());
         log.info("########## ClientService #### getClientOrderHistory #  foodOrderRequests: " + foodOrderRequests);
 
-        // Stwórz i zwróć obiekt ClientOrderHistory
         return ClientOrderHistory.builder()
                 .customerId(clientId)
                 .customerFoodOrders(foodOrderRequests)

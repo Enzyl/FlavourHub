@@ -4,19 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-@Data
 @Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+public class ClientDTO {
+    String fullName;
+    String phoneNumber;
+    UserDTO userDTO;
 
-public class OwnerDTO {
-    private String name;
-    private String surname;
-    private String phoneNumber;
-    private String nip;
-    private String regon;
-    private UserDTO userDTO;
 
     @Builder
     @Data
@@ -29,6 +25,4 @@ public class OwnerDTO {
         private String role;
         private boolean enabled;
     }
-
-
 }

@@ -32,10 +32,10 @@ public class ClientRepository implements ClientDAO {
     private final FoodOrderingAppUserEntityMapper foodOrderingAppUserEntityMapper;
 
     @Override
-    public Client save(Client client, FoodOrderingAppUser user) {
+    public Client save(Client client) {
         log.info("########## ClientRepository #### save #  Client: " + client.toString());
-        log.info("########## ClientRepository #### save #  FoodOrderingAppUser: " + user.toString());
-
+        log.info("########## ClientRepository #### save #  FoodOrderingAppUser: " + client.getUser().toString());
+        FoodOrderingAppUser user = client.getUser();
         Optional<FoodOrderingAppUserEntity> existingUser = foodOrderingAppUserJpaRepository.findByUsername(user.getUsername());
         log.info("########## ClientRepository #### save #  existingUser " + existingUser);
         Optional<ClientEntity> clientByUsername = clientJpaRepository.findByUsername(user.getUsername());
