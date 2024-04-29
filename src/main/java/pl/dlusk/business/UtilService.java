@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
+import pl.dlusk.business.dao.PaymentDAO;
+import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
 
@@ -14,7 +16,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UtilService {
 
-    private final FoodOrderService foodOrderService;
     private final PaymentService paymentService;
     public void updateSessionAttributes(HttpSession session, Menu menu, Restaurant restaurant) {
         Set<MenuItem> menuItems = (Set<MenuItem>) session.getAttribute("menuItems");
@@ -48,18 +49,6 @@ public class UtilService {
     }
 
 
-
-    public List<FoodOrder> getFoodOrders(List<FoodOrder> foodOrdersInProgress, Restaurant restaurant) {
-        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrdersInProgress.stream().map(
-                foodOrder -> {
-                    Long foodOrderId = foodOrder.getFoodOrderId();
-                    Set<OrderItem> orderItemsByFoodOrderId = foodOrderService.findOrderItemsByFoodOrderId(foodOrderId);
-                    return foodOrder.withOrderItems(orderItemsByFoodOrderId)
-                            .withRestaurant(restaurant);
-                }
-        ).toList();
-        return fooOrdersInProgressWithRestaurant;
-    }
     public void updateModelWithMenuDetails(Model model, ShoppingCart shoppingCart, Long restaurantId, Menu menu, HttpSession session) {
 
         BigDecimal totalValue = paymentService.calculateTotalValue(shoppingCart);
@@ -70,4 +59,17 @@ public class UtilService {
         session.setAttribute("totalValue", totalValue);
         session.setAttribute("restaurantId", restaurantId);
     }
+
+
+    public void clearOrderSessionAttributes(HttpSession session, String uniqueFoodNumber) {
+        session.removeAttribute("delivery");
+        session.removeAttribute("shoppingCart");
+        session.removeAttribute("payment");
+        session.removeAttribute("totalValue");
+        session.removeAttribute("restaurantId");
+        session.removeAttribute("location");
+        session.removeAttribute("uniqueFoodNumber");
+        session.setAttribute("uniqueFoodNumber", uniqueFoodNumber);
+    }
+
 }

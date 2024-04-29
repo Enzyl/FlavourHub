@@ -162,7 +162,7 @@ class ClientControllerTest {
         user.setUsername(expectedUsername);
 
         Mockito.when(mockSession.getAttribute("username")).thenReturn(expectedUsername);
-        Mockito.when(clientService.getUserByUsername(expectedUsername)).thenReturn(user);
+        Mockito.when(userService.getUserByUsername(expectedUsername)).thenReturn(user);
 
         // Act
         String viewName = clientController.showClientLoggedInView(model, mockSession);
@@ -171,7 +171,7 @@ class ClientControllerTest {
         assertEquals("clientLoggedInView", viewName);
         Mockito.verify(mockSession).getAttribute("username");
         Mockito.verify(model).addAttribute("username", expectedUsername);
-        Mockito.verify(clientService).getUserByUsername(expectedUsername);
+        Mockito.verify(userService).getUserByUsername(expectedUsername);
     }
 
 
@@ -482,31 +482,6 @@ class ClientControllerTest {
         assertFalse(user.isEnabled());
     }
 
-    @Test
-    public void testCreateClientFromParams_withValidParams() {
-        Map<String, String> params = new HashMap<>();
-        params.put("fullName", "John Doe");
-        params.put("phoneNumber", "1234567890");
-        FoodOrderingAppUser expectedUser = FoodOrderingAppUser.builder()
-                .username("testUser")
-                .password(null)
-                .email(null)
-                .enabled(false)
-                .role(Roles.CLIENT.toString())
-                .build();
 
-        Client expectedClient = Client.builder()
-                .fullName("John Doe")
-                .phoneNumber("1234567890")
-                .user(expectedUser)
-                .build();
-        when(clientService.createClientFromParams(params,expectedUser)).thenReturn(expectedClient);
-
-        Client client = clientService.createClientFromParams(params, expectedUser);
-
-        assertEquals("John Doe", client.getFullName());
-        assertEquals("1234567890", client.getPhoneNumber());
-        assertEquals(expectedUser, client.getUser());
-    }
 
 }

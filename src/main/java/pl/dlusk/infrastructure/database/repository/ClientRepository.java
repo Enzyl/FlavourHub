@@ -117,6 +117,7 @@ public class ClientRepository implements ClientDAO {
 
     @Override
     public List<FoodOrder> findOrdersByClientId(Long clientId) {
+
         return clientJpaRepository.findByUserId(clientId)
                 .map(ClientEntity::getFoodOrderEntities)
                 .orElse(Collections.emptySet())

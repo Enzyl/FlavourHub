@@ -640,7 +640,7 @@ class RestaurantControllerTest {
         when(restaurantService.getRestaurantByUsername("user123")).thenReturn(restaurant);
         when(foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId(), FoodOrderStatus.CONFIRMED.toString())).thenReturn(initialFoodOrders);
 
-        when(utilService.getFoodOrders(initialFoodOrders, restaurant)).thenReturn(filteredFoodOrders);
+        when(foodOrderService.getFoodOrders(initialFoodOrders, restaurant)).thenReturn(filteredFoodOrders);
 
         // Act
         String viewName = restaurantController.showOrdersInProgress(model);
@@ -653,7 +653,7 @@ class RestaurantControllerTest {
         verify(restaurantService).getRestaurantByUsername("user123");
         verify(foodOrderService).getFoodOrdersWithStatus(restaurant.getRestaurantId(), FoodOrderStatus.CONFIRMED.toString());
 
-        verify(utilService).getFoodOrders(initialFoodOrders, restaurant);
+        verify(foodOrderService).getFoodOrders(initialFoodOrders, restaurant);
         verify(model).addAttribute("foodOrdersInProgress", filteredFoodOrders);
     }
 

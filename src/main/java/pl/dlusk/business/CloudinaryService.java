@@ -17,8 +17,6 @@ import java.util.UUID;
 @Slf4j
 @Service
 @AllArgsConstructor
-
-
 public class CloudinaryService implements CloudinaryClient{
 
     private  Cloudinary cloudinary;

@@ -24,5 +24,4 @@ public class FoodOrder {
     Review review;
     Delivery delivery;
     Payment payment;
-
 }

@@ -59,7 +59,7 @@ public class ClientController {
     @GetMapping("/clientLoggedInView")
     public String showClientLoggedInView(Model model, HttpSession session) {
         String username = (String) session.getAttribute("username");
-        FoodOrderingAppUser user = clientService.getUserByUsername(username);
+        FoodOrderingAppUser user = userService.getUserByUsername(username);
         session.setAttribute("user", user);
         model.addAttribute("username", user.getUsername());
         return "clientLoggedInView";

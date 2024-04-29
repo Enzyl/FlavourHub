@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.ClientDAO;
 import pl.dlusk.business.dao.FoodOrderDAO;
+import pl.dlusk.business.dao.PaymentDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.exception.ResourceNotFoundException;
@@ -26,50 +27,17 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class FoodOrderService {
     private final FoodOrderDAO foodOrderDAO;
-    private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
     private final ClientDAO clientDAO;
+    private final PaymentDAO paymentDAO;
     private final RestaurantDAO restaurantDAO;
     private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
-    @Transactional
-    public FoodOrder createOrUpdateFoodOrder(FoodOrder foodOrder) {
-        return foodOrderDAO.save(foodOrder);
-    }
+    private final UtilService utilService;
 
     public FoodOrder getFoodOrderById(Long id) {
         return foodOrderDAO.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FoodOrder with id [%s] not found".formatted(id)));
     }
 
-
-    public List<FoodOrder> getAllFoodOrders() {
-        // Logika do pobierania wszystkich zamówień
-        return foodOrderDAO.findAll();
-    }
-
-    public List<FoodOrder> getFoodOrdersByClient(Long clientId) {
-        // Logika do pobierania zamówień danego klienta
-        return foodOrderDAO.findByClientId(clientId);
-    }
-
-    public List<FoodOrder> getFoodOrdersByRestaurant(Long restaurantId) {
-        // Logika do pobierania zamówień dla danej restauracji
-        return foodOrderDAO.findByRestaurantId(restaurantId);
-    }
-
-    public void deleteFoodOrder(Long id) {
-        // Logika do usuwania zamówienia po ID
-        foodOrderDAO.deleteById(id);
-    }
-
-    public List<FoodOrder> getFoodOrdersByStatus(String status) {
-        // Logika do pobierania zamówień o określonym statusie
-        return foodOrderDAO.findByOrderStatus(status);
-    }
-
-    public List<FoodOrder> getFoodOrdersWithinDateRange(LocalDateTime start, LocalDateTime end) {
-        // Logika do pobierania zamówień w określonym przedziale czasowym
-        return foodOrderDAO.findByDateRange(start, end);
-    }
 
     public Review addReviewToRestaurant(Long orderId, Review review) {
         return foodOrderDAO.addReview(orderId,review);
@@ -116,30 +84,26 @@ public class FoodOrderService {
 
     @Transactional
     public void updateFoodOrderStatus(Long orderId, String status) {
-        log.info("########## FoodOrderService #### cancelOrder # START");
 
         // Aktualizacja statusu zamówienia na "Cancelled"
         foodOrderDAO.updateFoodOrderStatus(orderId, status);
-        log.info("Order with id {} has been updated to status {}.", orderId, status);
+        log.debug("Order with id {} has been updated to status {}.", orderId, status);
     }
 
-    public FoodOrder findFoodOrderByOrderNumber(String foodOrderNumber){
-        log.info("########## FoodOrderService #### findFoodOrderByOrderNumber # START");
+    public FoodOrder showOrderSummary(String uniqueFoodNumber) {
+        // This method now trusts that findFoodOrderByOrderNumber properly attaches the order items
+        return findFoodOrderByOrderNumber(uniqueFoodNumber);
+    }
+
+    public FoodOrder findFoodOrderByOrderNumber(String foodOrderNumber) {
         FoodOrder foodOrder = foodOrderDAO.findFoodOrderByFoodOrderNumber(foodOrderNumber);
-
-        Long foodOrderId = foodOrder.getFoodOrderId();
-        Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
-
-        log.info("########## FoodOrderService #### findFoodOrderByOrderNumber # FINISHC");
+        if (foodOrder != null) {
+            Set<OrderItem> orderItems = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrder.getFoodOrderId());
+            foodOrder.withOrderItems(orderItems);
+        }
         return foodOrder;
     }
-    public FoodOrder showOrderSummary(String uniqueFoodNumber){
 
-        FoodOrder foodOrderByOrderNumber = findFoodOrderByOrderNumber(uniqueFoodNumber);
-        Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderByOrderNumber.getFoodOrderId());
-        FoodOrder foodOrderWithOrderItems = foodOrderByOrderNumber.withOrderItems(orderItemsByFoodOrderId);
-        return foodOrderWithOrderItems;
-    }
     public Set<OrderItem> findOrderItemsByFoodOrderId(Long foodOrderId){
         Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
         return orderItemsByFoodOrderId;
@@ -170,20 +134,34 @@ public class FoodOrderService {
 
         String uniqueFoodNumber = createFoodOrder(restaurantId, user.getUsername(), totalValue, delivery, payment, shoppingCart);
 
-        clearOrderSessionAttributes(session, uniqueFoodNumber);
+        utilService.clearOrderSessionAttributes(session, uniqueFoodNumber);
 
         return uniqueFoodNumber;
     }
+    public ClientOrderHistory.FoodOrderRequest convertToFoodOrderRequest(FoodOrder foodOrder, Set<OrderItem> orderItems) {
+        Long foodOrderId = foodOrder.getFoodOrderId();
+        Restaurant restaurantByFoodOrderId = restaurantDAO.findRestaurantByFoodOrderId(foodOrderId);
+        Payment paymentByFoodOrderId = paymentDAO.findByFoodOrderId(foodOrderId);
 
-    private void clearOrderSessionAttributes(HttpSession session, String uniqueFoodNumber) {
-        session.removeAttribute("delivery");
-        session.removeAttribute("shoppingCart");
-        session.removeAttribute("payment");
-        session.removeAttribute("totalValue");
-        session.removeAttribute("restaurantId");
-        session.removeAttribute("location");
-        session.removeAttribute("uniqueFoodNumber");
-        session.setAttribute("uniqueFoodNumber", uniqueFoodNumber);
+        return ClientOrderHistory.FoodOrderRequest.builder()
+                .orderId(foodOrder.getFoodOrderId())
+                .orderTime(foodOrder.getOrderTime())
+                .foodOrderStatus(foodOrder.getFoodOrderStatus())
+                .totalPrice(foodOrder.getTotalPrice())
+                .restaurant(restaurantByFoodOrderId)
+                .orderItems(orderItems)
+                .payment(paymentByFoodOrderId)
+                .build();
     }
-
+    public List<FoodOrder> getFoodOrders(List<FoodOrder> foodOrdersInProgress, Restaurant restaurant) {
+        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrdersInProgress.stream().map(
+                foodOrder -> {
+                    Long foodOrderId = foodOrder.getFoodOrderId();
+                    Set<OrderItem> orderItemsByFoodOrderId = findOrderItemsByFoodOrderId(foodOrderId);
+                    return foodOrder.withOrderItems(orderItemsByFoodOrderId)
+                            .withRestaurant(restaurant);
+                }
+        ).toList();
+        return fooOrdersInProgressWithRestaurant;
+    }
 }

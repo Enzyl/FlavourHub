@@ -340,7 +340,7 @@ public class RestaurantController {
 
         List<FoodOrder> foodOrdersInProgress = foodOrderService.getFoodOrdersWithStatus(restaurant.getRestaurantId(), FoodOrderStatus.CONFIRMED.toString());
 
-        List<FoodOrder> fooOrdersInProgressWithRestaurant = utilService.getFoodOrders(foodOrdersInProgress, restaurant);
+        List<FoodOrder> fooOrdersInProgressWithRestaurant = foodOrderService.getFoodOrders(foodOrdersInProgress, restaurant);
 
         model.addAttribute("foodOrdersInProgress", fooOrdersInProgressWithRestaurant);
         log.info("########## OwnerController #### showOrdersInProgress #  FINISH WITH foodOrdersInProgress {}",

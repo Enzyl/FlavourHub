@@ -28,8 +28,6 @@ public class ClientService {
     private final FoodOrderingAppUserDAO foodOrderingAppUserRepository;
     private final ClientRepository clientRepository;
     private final FoodOrderDAO foodOrderDAO;
-    private final RestaurantDAO restaurantDAO;
-    private final PaymentDAO paymentDAO;
     private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
     private final FoodOrderService foodOrderService;
 
@@ -50,7 +48,7 @@ public class ClientService {
                 .map(foodOrder -> {
                     Set<OrderItem> orderItems = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrder.getFoodOrderId());
                     log.info("########## ClientService #### getClientOrderHistory #  foodOrderId:" + foodOrder.getFoodOrderId() + " orderItems: " + orderItems);
-                    return convertToFoodOrderRequest(foodOrder, orderItems);
+                    return foodOrderService.convertToFoodOrderRequest(foodOrder, orderItems);
                 })
                 .sorted((o1, o2) -> o2.getOrderTime().compareTo(o1.getOrderTime()))
                 .collect(Collectors.toList());
@@ -63,22 +61,6 @@ public class ClientService {
     }
 
 
-    private ClientOrderHistory.FoodOrderRequest convertToFoodOrderRequest(FoodOrder foodOrder, Set<OrderItem> orderItems) {
-        Long foodOrderId = foodOrder.getFoodOrderId();
-        Restaurant restaurantByFoodOrderId = restaurantDAO.findRestaurantByFoodOrderId(foodOrderId);
-        Payment paymentByFoodOrderId = paymentDAO.findByFoodOrderId(foodOrderId);
-
-        return ClientOrderHistory.FoodOrderRequest.builder()
-                .orderId(foodOrder.getFoodOrderId())
-                .orderTime(foodOrder.getOrderTime())
-                .foodOrderStatus(foodOrder.getFoodOrderStatus())
-                .totalPrice(foodOrder.getTotalPrice())
-                .restaurant(restaurantByFoodOrderId)
-                .orderItems(orderItems)
-                .payment(paymentByFoodOrderId)
-                .build();
-    }
-
     public Client getClientByUsername(String username) {
         log.info("########## ClientService #### getClientByUsername #  START ");
 
@@ -90,18 +72,7 @@ public class ClientService {
         return client;
     }
 
-    public FoodOrderingAppUser getUserByUsername(String username) {
-        FoodOrderingAppUser user = foodOrderingAppUserRepository.findByUsername(username);
-        return user;
-    }
 
-    public Client createClientFromParams(Map<String, String> params, FoodOrderingAppUser user) {
-        return Client.builder()
-                .fullName(params.get("fullName"))
-                .phoneNumber(params.get("phoneNumber"))
-                .user(user)
-                .build();
-    }
 
 
 
