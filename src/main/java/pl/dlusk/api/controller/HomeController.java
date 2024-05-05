@@ -10,13 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import pl.dlusk.api.dto.ClientDTO;
-import pl.dlusk.api.dto.OwnerDTO;
+import pl.dlusk.api.dto.ClientRegisterRequestDTO;
+import pl.dlusk.api.dto.OwnerRegisterRequestDTO;
 import pl.dlusk.business.RestaurantService;
-import pl.dlusk.domain.Client;
 import pl.dlusk.domain.Restaurant;
 import pl.dlusk.domain.Roles;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+
 @Slf4j
 @Controller
 @AllArgsConstructor
@@ -57,14 +56,14 @@ public class HomeController {
     public String showRegisterForms(HttpSession session, Model model) {
         log.info("########## HomeController #### showRegisterForms #  START");
 
-        OwnerDTO ownerDTO = OwnerDTO.builder()
+        OwnerRegisterRequestDTO ownerRegisterRequestDTO = OwnerRegisterRequestDTO.builder()
                 .name("")
                 .surname("")
                 .phoneNumber("")
                 .nip("")
                 .regon("")
                 .userDTO(
-                        OwnerDTO.UserDTO.builder()
+                        OwnerRegisterRequestDTO.UserDTO.builder()
                                 .username("")
                                 .password("")
                                 .email("")
@@ -73,11 +72,11 @@ public class HomeController {
                                 .build())
                 .build();
 
-        ClientDTO clientDTO = ClientDTO.builder()
+        ClientRegisterRequestDTO clientRegisterRequestDTO = ClientRegisterRequestDTO.builder()
                 .fullName("")
                 .phoneNumber("")
                 .userDTO(
-                        ClientDTO.UserDTO.builder()
+                        ClientRegisterRequestDTO.UserDTO.builder()
                                 .username("")
                                 .password("")
                                 .email("")
@@ -86,11 +85,11 @@ public class HomeController {
                                 .build())
                 .build();
 
-        model.addAttribute("client", clientDTO);
-        model.addAttribute("owner", ownerDTO);
+        model.addAttribute("client", clientRegisterRequestDTO);
+        model.addAttribute("owner", ownerRegisterRequestDTO);
 
-        session.setAttribute("owner", ownerDTO);
-        session.setAttribute("client", clientDTO);
+        session.setAttribute("owner", ownerRegisterRequestDTO);
+        session.setAttribute("client", clientRegisterRequestDTO);
 
 
         log.info("########## HomeController #### showRegisterForms #  FINISH");

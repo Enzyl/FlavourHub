@@ -2,7 +2,6 @@ package pl.dlusk.business.dao;
 
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.FoodOrder;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 
 import java.util.List;
 
@@ -21,4 +20,5 @@ public interface ClientDAO {
     Client findClientByOrderId(Long orderId);
     Client findClientByUsername(String username);
 
+    Client findByClientId(Long clientId);
 }

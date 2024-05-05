@@ -8,10 +8,10 @@ import pl.dlusk.domain.Owner;
 import pl.dlusk.infrastructure.database.entity.OwnerEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.OwnerJpaRepository;
 import pl.dlusk.infrastructure.database.repository.mapper.OwnerEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserJpaRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserEntity;
+import pl.dlusk.infrastructure.security.UserEntityMapper;
+import pl.dlusk.infrastructure.security.UserJpaRepository;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
 import java.util.ArrayList;
@@ -26,8 +26,8 @@ public class OwnerRepository implements OwnerDAO {
     private final OwnerEntityMapper ownerEntityMapper;
     private final OwnerJpaRepository ownerJpaRepository;
 
-    private final FoodOrderingAppUserJpaRepository foodOrderingAppUserJpaRepository;
-    private final FoodOrderingAppUserEntityMapper foodOrderingAppUserEntityMapper;
+    private final UserJpaRepository userJpaRepository;
+    private final UserEntityMapper userEntityMapper;
 
 
     @Override
@@ -43,13 +43,13 @@ public class OwnerRepository implements OwnerDAO {
     }
 
     @Override
-    public Owner saveOwnerWithUserBefore(Owner owner, FoodOrderingAppUser user) {
+    public Owner saveOwnerWithUserBefore(Owner owner, User user) {
         log.info("########## OwnerRepository #### saveOwnerWithUserBefore START");
         log.info("########## OwnerRepository #### saveOwnerWithUserBefore owner {}",owner);
         log.info("########## OwnerRepository #### saveOwnerWithUserBefore user {}",user);
         Optional<OwnerEntity> existingOwnerByNIP = ownerJpaRepository.findByNip(owner.getNip());
         log.info("########## OwnerRepository #### existingOwnerByNIP {}",existingOwnerByNIP);
-        Optional<FoodOrderingAppUserEntity> existingUserByEmail = foodOrderingAppUserJpaRepository.findByEmail(user.getEmail());
+        Optional<UserEntity> existingUserByEmail = userJpaRepository.findByEmail(user.getEmail());
         log.info("########## OwnerRepository #### existingUserByEmail {}",existingUserByEmail);
         if (existingOwnerByNIP.isPresent()) {
             log.info("########## OwnerRepository #### existingOwnerByNIP.isPresent() {}",existingOwnerByNIP.isPresent());
@@ -60,8 +60,8 @@ public class OwnerRepository implements OwnerDAO {
             log.info("########## OwnerRepository #### existingUserByEmail.isPresent() {}",existingUserByEmail.isPresent());
             throw new UsernameAlreadyExistsException(user.getUsername());
         }
-        FoodOrderingAppUserEntity userEntity = foodOrderingAppUserEntityMapper.mapToEntity(user);
-        FoodOrderingAppUserEntity savedUserEntity = foodOrderingAppUserJpaRepository.save(userEntity);
+        UserEntity userEntity = userEntityMapper.mapToEntity(user);
+        UserEntity savedUserEntity = userJpaRepository.save(userEntity);
         log.info("########## OwnerRepository #### savedUserEntity {}",savedUserEntity);
 
         OwnerEntity ownerEntity = ownerEntityMapper.mapToEntity(owner);
@@ -87,7 +87,7 @@ public class OwnerRepository implements OwnerDAO {
     @Override
     public void deleteById(Long ownerToDeleteId) {
         ownerJpaRepository.findById(ownerToDeleteId).ifPresent(ownerEntity -> {
-            foodOrderingAppUserJpaRepository.deleteById(ownerEntity.getUser().getId());
+            userJpaRepository.deleteById(ownerEntity.getUser().getId());
             ownerJpaRepository.deleteById(ownerToDeleteId);
         });
     }

@@ -2,14 +2,15 @@ package pl.dlusk.api.dto.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
-import pl.dlusk.api.dto.OwnerDTO;
-import pl.dlusk.domain.Owner;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.api.dto.ClientRegisterRequestDTO;
+import pl.dlusk.domain.Client;
+import pl.dlusk.infrastructure.security.User;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 
-public interface OwnerDTOMapper {
-   default  Owner mapFromDTO(OwnerDTO dto) {
-        FoodOrderingAppUser user = FoodOrderingAppUser.builder()
+public interface ClientRegisterDTOMapper {
+
+    default Client mapFromDTO(ClientRegisterRequestDTO dto) {
+        User user = User.builder()
                 .username(dto.getUserDTO().getUsername())
                 .password(dto.getUserDTO().getPassword())
                 .email(dto.getUserDTO().getEmail())
@@ -17,13 +18,12 @@ public interface OwnerDTOMapper {
                 .enabled(dto.getUserDTO().isEnabled())
                 .build();
 
-        return Owner.builder()
-                .name(dto.getName())
-                .surname(dto.getSurname())
+        return Client.builder()
+                .fullName(dto.getFullName())
                 .phoneNumber(dto.getPhoneNumber())
-                .nip(dto.getNip())
-                .regon(dto.getRegon())
+                .foodOrders(null)
                 .user(user)
                 .build();
     }
+
 }

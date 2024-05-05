@@ -12,9 +12,8 @@ import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.exception.ResourceNotFoundException;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,7 +29,7 @@ public class FoodOrderService {
     private final ClientDAO clientDAO;
     private final PaymentDAO paymentDAO;
     private final RestaurantDAO restaurantDAO;
-    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
+    private final UserRepository foodOrderingAppUserRepository;
     private final UtilService utilService;
 
     public FoodOrder getFoodOrderById(Long id) {
@@ -127,7 +126,7 @@ public class FoodOrderService {
     public String processOrder(HttpSession session) {
         ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");
         Long restaurantId = (Long) session.getAttribute("restaurantId");
-        FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
+        User user = (User) session.getAttribute("user");
         BigDecimal totalValue = (BigDecimal) session.getAttribute("totalValue");
         Delivery delivery = (Delivery) session.getAttribute("delivery");
         Payment payment = (Payment) session.getAttribute("payment");

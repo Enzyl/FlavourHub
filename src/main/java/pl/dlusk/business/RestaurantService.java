@@ -12,7 +12,7 @@ import pl.dlusk.domain.*;
 import pl.dlusk.infrastructure.database.entity.RestaurantDeliveryStreetEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.RestaurantDeliveryStreetJpaRepository;
 import pl.dlusk.infrastructure.database.repository.mapper.RestaurantDeliveryStreetEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 
 import java.util.*;
 
@@ -143,7 +143,7 @@ public class RestaurantService {
     public Restaurant getOrCreateRestaurant(HttpSession session) {
         Restaurant restaurant = (Restaurant) session.getAttribute("restaurant");
         if (restaurant == null) {
-            String username = ((FoodOrderingAppUser) session.getAttribute("user")).getUsername();
+            String username = ((User) session.getAttribute("user")).getUsername();
             restaurant = getRestaurantByUsername(username);
             session.setAttribute("restaurant", restaurant);
         }

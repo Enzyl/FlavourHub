@@ -15,5 +15,7 @@ public class ServerInfoLogger implements ApplicationListener<WebServerInitialize
     public void onApplicationEvent(WebServerInitializedEvent event) {
         int port = event.getWebServer().getPort();
         System.out.println("Aplikacja dostępna pod adresem: http://localhost:" + port + contextPath);
+        System.out.println("Swager jest dostępny pod adresem: http://localhost:" + port + contextPath +"/swagger-ui.html");
+
     }
 }

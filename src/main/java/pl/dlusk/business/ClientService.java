@@ -6,15 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.ClientDAO;
 import pl.dlusk.business.dao.FoodOrderDAO;
-import pl.dlusk.business.dao.PaymentDAO;
-import pl.dlusk.business.dao.RestaurantDAO;
 import pl.dlusk.domain.*;
-import pl.dlusk.infrastructure.database.repository.ClientRepository;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserDAO;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,11 +21,8 @@ import java.util.stream.Collectors;
 public class ClientService {
 
     private final ClientDAO clientDAO;
-
-    private final FoodOrderingAppUserDAO foodOrderingAppUserRepository;
-    private final ClientRepository clientRepository;
     private final FoodOrderDAO foodOrderDAO;
-    private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
+    private final UserDAO userDAO;
     private final FoodOrderService foodOrderService;
 
     @Transactional
@@ -39,7 +33,7 @@ public class ClientService {
 
     @Transactional
     public ClientOrderHistory getClientOrderHistory(String username) {
-        Long clientId = foodOrderingAppUserDAO.findIdByUsername(username);
+        Long clientId = userDAO.findIdByUsername(username);
         log.info("########## ClientService #### getClientOrderHistory #  START");
         log.info("########## ClientService #### getClientOrderHistory #  clientId {}", clientId);
         List<FoodOrder> foodOrders = clientDAO.findOrdersByClientId(clientId);
@@ -64,14 +58,31 @@ public class ClientService {
     public Client getClientByUsername(String username) {
         log.info("########## ClientService #### getClientByUsername #  START ");
 
-        Long clientId = foodOrderingAppUserRepository.findIdByUsername(username);
+        Long clientId = userDAO.findIdByUsername(username);
         log.info("########## ClientService #### getClientByUsername #  clientId: " + clientId);
 
-        Client client = clientRepository.findByUserId(clientId);
+        Client client = clientDAO.findByUserId(clientId);
         log.info("########## ClientService #### getClientByUsername #  client: " + client);
         return client;
     }
 
+    public Client getClientById(Long clientId){
+
+        Client client = clientDAO.findByClientId(clientId);
+        User user = userDAO.findByClientId(client.getClientId());
+        client.withUser(user);
+        return client;
+    }
+    public List<Client> getAllClients(){
+        List<Client> clients = new ArrayList<>();
+        System.out.println(clients);
+        List<Client> all = clientDAO.findAll();
+        for (Client client : all) {
+            User user = userDAO.findByClientId(client.getClientId());
+            clients.add(client.withUser(user));
+        }
+        return clients;
+    }
 
 
 

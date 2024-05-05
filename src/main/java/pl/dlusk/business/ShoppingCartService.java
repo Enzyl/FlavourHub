@@ -4,13 +4,13 @@ import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
+import pl.dlusk.infrastructure.security.UserRepository;
 
 @Service
 @AllArgsConstructor
 public class ShoppingCartService {
 
-    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
+    private final UserRepository foodOrderingAppUserRepository;
 
     public ShoppingCart getOrCreateShoppingCart(HttpSession session) {
         ShoppingCart shoppingCart = (ShoppingCart) session.getAttribute("shoppingCart");

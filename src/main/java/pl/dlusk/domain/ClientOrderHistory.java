@@ -32,7 +32,6 @@ public class ClientOrderHistory {
         Payment payment;
 
         public boolean isCancellable() {
-            // Ustawienie limitu anulowania na 20 minut
             final long CANCELLATION_LIMIT_MINUTES = 20;
             return Duration.between(this.orderTime, LocalDateTime.now()).toMinutes() < CANCELLATION_LIMIT_MINUTES;
         }

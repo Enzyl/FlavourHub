@@ -10,10 +10,10 @@ import pl.dlusk.domain.Owner;
 import pl.dlusk.infrastructure.database.entity.OwnerEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.OwnerJpaRepository;
 import pl.dlusk.infrastructure.database.repository.mapper.OwnerEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserJpaRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserEntity;
+import pl.dlusk.infrastructure.security.UserEntityMapper;
+import pl.dlusk.infrastructure.security.UserJpaRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,9 +31,9 @@ class OwnerRepositoryTest {
     @Mock
     private OwnerJpaRepository ownerJpaRepository;
     @Mock
-    private FoodOrderingAppUserJpaRepository foodOrderingAppUserJpaRepository;
+    private UserJpaRepository userJpaRepository;
     @Mock
-    private FoodOrderingAppUserEntityMapper foodOrderingAppUserEntityMapper;
+    private UserEntityMapper userEntityMapper;
 
     @InjectMocks
     private OwnerRepository ownerRepository;
@@ -86,12 +86,12 @@ class OwnerRepositoryTest {
 
     @Test
     void saveOwnerWithUserBeforeShouldPersistOwner() {
-        FoodOrderingAppUser mockUser = mock(FoodOrderingAppUser.class);
+        User mockUser = mock(User.class);
 
-        FoodOrderingAppUserEntity userEntity = new FoodOrderingAppUserEntity();
+        UserEntity userEntity = new UserEntity();
         userEntity.setUsername("testUsername");
-        when(foodOrderingAppUserEntityMapper.mapToEntity(any(FoodOrderingAppUser.class))).thenReturn(userEntity);
-        when(foodOrderingAppUserJpaRepository.save(any(FoodOrderingAppUserEntity.class))).thenReturn(userEntity);
+        when(userEntityMapper.mapToEntity(any(User.class))).thenReturn(userEntity);
+        when(userJpaRepository.save(any(UserEntity.class))).thenReturn(userEntity);
 
         OwnerEntity ownerEntityWithUser = new OwnerEntity();
         ownerEntityWithUser.setUser(userEntity);
@@ -125,18 +125,18 @@ class OwnerRepositoryTest {
     void deleteByIdShouldRemoveOwner() {
         OwnerEntity mockOwnerEntity = new OwnerEntity();
         mockOwnerEntity.setId(1L);
-        FoodOrderingAppUserEntity mockUserEntity = new FoodOrderingAppUserEntity();
+        UserEntity mockUserEntity = new UserEntity();
         mockOwnerEntity.setUser(mockUserEntity);
 
         mockUserEntity.setId(1L);
 
         when(ownerJpaRepository.findById(1L)).thenReturn(Optional.of(mockOwnerEntity));
-        doNothing().when(foodOrderingAppUserJpaRepository).deleteById(1L);
+        doNothing().when(userJpaRepository).deleteById(1L);
         doNothing().when(ownerJpaRepository).deleteById(1L);
 
         ownerRepository.deleteById(1L);
 
-        verify(foodOrderingAppUserJpaRepository, times(1)).deleteById(1L);
+        verify(userJpaRepository, times(1)).deleteById(1L);
         verify(ownerJpaRepository, times(1)).deleteById(1L);
     }
 

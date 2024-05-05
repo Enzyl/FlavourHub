@@ -1,7 +1,7 @@
 package pl.dlusk.domain;
 
 import lombok.*;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 
 import java.util.Set;
 
@@ -14,7 +14,7 @@ public class Client {
     Long clientId;
     String fullName;
     String phoneNumber;
-    FoodOrderingAppUser user;
+    User user;
     Set<FoodOrder> foodOrders;
 
 }

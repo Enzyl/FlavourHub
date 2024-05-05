@@ -12,7 +12,7 @@ import pl.dlusk.business.RestaurantService;
 import pl.dlusk.domain.Menu;
 import pl.dlusk.domain.MenuItem;
 import pl.dlusk.domain.Restaurant;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,7 +57,7 @@ class OwnerControllerTest {
         // Arrange
         String username = "testUser";
         when(session.getAttribute("username")).thenReturn(username);
-        when(ownerService.getUserByUsername(username)).thenReturn(new FoodOrderingAppUser());
+        when(ownerService.getUserByUsername(username)).thenReturn(new User());
         when(restaurantService.getRestaurantByUsername(username)).thenReturn(null);
 
         // Act
@@ -74,7 +74,7 @@ class OwnerControllerTest {
         Restaurant restaurant = Restaurant.builder()
                 .build();
         when(session.getAttribute("username")).thenReturn(username);
-        when(ownerService.getUserByUsername(username)).thenReturn(new FoodOrderingAppUser());
+        when(ownerService.getUserByUsername(username)).thenReturn(new User());
         when(restaurantService.getRestaurantByUsername(username)).thenReturn(restaurant);
         when(restaurantService.getMenuByRestaurant(restaurant)).thenReturn(null);
 
@@ -93,7 +93,7 @@ class OwnerControllerTest {
                 .build();
         Menu menu = Menu.builder().build();
         when(session.getAttribute("username")).thenReturn(username);
-        when(ownerService.getUserByUsername(username)).thenReturn(new FoodOrderingAppUser());
+        when(ownerService.getUserByUsername(username)).thenReturn(new User());
         when(restaurantService.getRestaurantByUsername(username)).thenReturn(restaurant);
         when(restaurantService.getMenuByRestaurant(restaurant)).thenReturn(menu);
         when(restaurantService.getMenuItemsByMenuId(menu)).thenReturn(Collections.emptySet());
@@ -115,7 +115,7 @@ class OwnerControllerTest {
         Set<MenuItem> menuItems = new HashSet<>(Arrays.asList(MenuItem.builder().build()));
 
         when(session.getAttribute("username")).thenReturn(username);
-        when(ownerService.getUserByUsername(username)).thenReturn(new FoodOrderingAppUser());
+        when(ownerService.getUserByUsername(username)).thenReturn(new User());
         when(restaurantService.getRestaurantByUsername(username)).thenReturn(restaurant);
         when(restaurantService.getMenuByRestaurant(restaurant)).thenReturn(menu);
         when(restaurantService.getMenuItemsByMenuId(menu)).thenReturn(menuItems);

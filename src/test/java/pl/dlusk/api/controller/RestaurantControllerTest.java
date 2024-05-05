@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.dlusk.api.dto.DeliveryStreetDTO;
 import pl.dlusk.api.dto.MenuDTO;
@@ -24,8 +23,7 @@ import pl.dlusk.api.dto.mapper.MenuDTOMapper;
 import pl.dlusk.business.*;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
+import pl.dlusk.infrastructure.security.User;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -463,7 +461,7 @@ class RestaurantControllerTest {
         assertEquals("redirect:/addItemsToTheMenuView", viewName);
 
         verify(restaurantService).getCurrentRestaurant(session);
-        verify(restaurantService).addMenu(menuDTOMapper.convertToMenu(menuDTO, restaurant));
+        verify(restaurantService).addMenu(menuDTOMapper.mapFromDTO(menuDTO, restaurant));
         verify(session).setAttribute("menuToUpdate", expectedMenu);
     }
 
@@ -546,7 +544,7 @@ class RestaurantControllerTest {
         // Arrange
         Set<MenuItem> existingMenuItems = new HashSet<>();
         existingMenuItems.add(MenuItem.builder().name("Pizza").build());
-        FoodOrderingAppUser user = Mockito.mock(FoodOrderingAppUser.class);
+        User user = Mockito.mock(User.class);
         Restaurant restaurant = Restaurant.builder().build();
         Menu expectedMenu = Menu.builder().restaurant(restaurant).build();
 
@@ -662,7 +660,7 @@ class RestaurantControllerTest {
         // Arrange
         Menu existingMenu = Menu.builder().build();
         Set<MenuItem> menuItems = new HashSet<>();
-        FoodOrderingAppUser user = Mockito.mock(FoodOrderingAppUser.class);
+        User user = Mockito.mock(User.class);
         Restaurant restaurant = Restaurant.builder().build();
 
         when(session.getAttribute("menu")).thenReturn(existingMenu);

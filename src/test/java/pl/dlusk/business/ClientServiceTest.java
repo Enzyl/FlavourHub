@@ -7,15 +7,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pl.dlusk.business.dao.ClientDAO;
 import pl.dlusk.business.dao.FoodOrderDAO;
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.ClientOrderHistory;
 import pl.dlusk.domain.FoodOrder;
 import pl.dlusk.domain.OrderItem;
 import pl.dlusk.infrastructure.database.repository.ClientRepository;
-import pl.dlusk.infrastructure.database.repository.FoodOrderRepository;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
+import pl.dlusk.infrastructure.security.UserRepository;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +29,7 @@ class ClientServiceTest {
     private ClientRepository clientRepository;
     @Mock
 
-    private FoodOrderingAppUserRepository foodOrderingAppUserRepository;
+    private UserRepository foodOrderingAppUserRepository;
     @Mock
     private FoodOrderDAO foodOrderDAO;
 

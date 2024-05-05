@@ -6,9 +6,9 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 
-public interface FoodOrderingAppUserEntityMapper {
+public interface UserEntityMapper {
     @Mapping(target = "password",ignore = true)
-    FoodOrderingAppUser mapFromEntity(FoodOrderingAppUserEntity entity);
+    User mapFromEntity(UserEntity entity);
 
-    FoodOrderingAppUserEntity mapToEntity(FoodOrderingAppUser user);
+    UserEntity mapToEntity(User user);
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
+import pl.dlusk.infrastructure.security.UserEntity;
 
 import java.util.Set;
 
@@ -29,5 +29,5 @@ public class ClientEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private FoodOrderingAppUserEntity user;
+    private UserEntity user;
 }

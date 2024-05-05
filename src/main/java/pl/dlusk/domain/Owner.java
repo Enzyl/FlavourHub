@@ -1,7 +1,7 @@
 package pl.dlusk.domain;
 
 import lombok.*;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 
 @With
 @Value
@@ -15,5 +15,5 @@ public class Owner {
     String phoneNumber;
     String nip;
     String regon;
-    FoodOrderingAppUser user;
+    User user;
 }

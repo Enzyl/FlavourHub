@@ -14,7 +14,7 @@ import java.util.Collection;
 @EqualsAndHashCode(of = "username")
 @ToString(of = {"userId","username", "email", "role", "enabled"})
 
-public class FoodOrderingAppUser implements UserDetails {
+public class User implements UserDetails {
     private Long userId;
     private String username;
     private String password;

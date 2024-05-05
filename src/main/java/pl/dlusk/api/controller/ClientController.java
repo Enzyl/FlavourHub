@@ -12,19 +12,18 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pl.dlusk.api.dto.ClientDTO;
+import pl.dlusk.api.dto.ClientRegisterRequestDTO;
 import pl.dlusk.api.dto.DeliveryAddressFormDTO;
-import pl.dlusk.api.dto.mapper.ClientDTOMapper;
+import pl.dlusk.api.dto.mapper.ClientRegisterDTOMapper;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.UserService;
 import pl.dlusk.domain.*;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -35,12 +34,12 @@ public class ClientController {
     private final ClientService clientService;
      private final FoodOrderService foodOrderService;
      private final UserService userService;
-    private final ClientDTOMapper clientDTOMapper;
+    private final ClientRegisterDTOMapper clientRegisterDTOMapper;
     @PostMapping("/registerClient")
-    public String registerClient(@ModelAttribute ClientDTO clientDTO, RedirectAttributes redirectAttributes) {
+    public String registerClient(@ModelAttribute ClientRegisterRequestDTO clientRegisterRequestDTO, RedirectAttributes redirectAttributes) {
         try {
             log.info("Starting client registration");
-            Client client = clientDTOMapper.mapFromDTO(clientDTO);
+            Client client = clientRegisterDTOMapper.mapFromDTO(clientRegisterRequestDTO);
             Client registeredClient = clientService.registerClient(client);
             redirectAttributes.addFlashAttribute("registeredClient", registeredClient);
             log.info("Client registration successful: {}", registeredClient);
@@ -50,7 +49,7 @@ public class ClientController {
             redirectAttributes.addFlashAttribute("errorMessage", "Username or email already exists.");
             return "redirect:/registerClientForm";
         } catch (Exception e) {
-            log.error("Registration failed for user: {}", clientDTO.getUserDTO().getUsername(), e);
+            log.error("Registration failed for user: {}", clientRegisterRequestDTO.getUserDTO().getUsername(), e);
             redirectAttributes.addFlashAttribute("errorMessage", "Registration failed.");
             return "redirect:/registerClientForm";
         }
@@ -59,7 +58,7 @@ public class ClientController {
     @GetMapping("/clientLoggedInView")
     public String showClientLoggedInView(Model model, HttpSession session) {
         String username = (String) session.getAttribute("username");
-        FoodOrderingAppUser user = userService.getUserByUsername(username);
+        User user = userService.getUserByUsername(username);
         session.setAttribute("user", user);
         model.addAttribute("username", user.getUsername());
         return "clientLoggedInView";
@@ -67,7 +66,7 @@ public class ClientController {
 
     @GetMapping("/userProfileView")
     public String showUserProfileView(Model model, Authentication authentication) {
-        FoodOrderingAppUser user = (FoodOrderingAppUser) authentication.getPrincipal();
+        User user = (User) authentication.getPrincipal();
 
         if (user == null) {
             log.info("No authenticated user found.");
@@ -161,7 +160,7 @@ public class ClientController {
 
     @GetMapping("/userOrders")
     public String showClientOrders(HttpSession session, Model model) {
-        FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
+        User user = (User) session.getAttribute("user");
         if (user == null) {
             model.addAttribute("errorMessage", "User not found. Please login again.");
             return "loginView";

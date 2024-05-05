@@ -15,10 +15,10 @@ import pl.dlusk.infrastructure.database.entity.FoodOrderEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.ClientJpaRepository;
 import pl.dlusk.infrastructure.database.repository.mapper.ClientEntityMapper;
 import pl.dlusk.infrastructure.database.repository.mapper.FoodOrderEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserJpaRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserEntity;
+import pl.dlusk.infrastructure.security.UserEntityMapper;
+import pl.dlusk.infrastructure.security.UserJpaRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,11 +38,11 @@ class ClientRepositoryTest {
     @Mock
     private ClientEntityMapper clientEntityMapper;
     @Mock
-    private FoodOrderingAppUserEntity foodOrderingAppUserEntity;
+    private UserEntity userEntity;
     @Mock
-    private FoodOrderingAppUserJpaRepository foodOrderingAppUserJpaRepository;
+    private UserJpaRepository userJpaRepository;
     @Mock
-    private FoodOrderingAppUserEntityMapper foodOrderingAppUserEntityMapper;
+    private UserEntityMapper userEntityMapper;
     @InjectMocks
     private ClientRepository clientRepository;
 
@@ -100,7 +100,7 @@ class ClientRepositoryTest {
     @Test
     void saveShouldPersistClient() {
 
-        FoodOrderingAppUser user = FoodOrderingAppUser.builder()
+        User user = User.builder()
                 .username("testUsername")
                 .password("testPassword")
                 .email("testEmail")
@@ -115,17 +115,17 @@ class ClientRepositoryTest {
                 .user(user)
                 .build();
 
-        FoodOrderingAppUserEntity userEntity = new FoodOrderingAppUserEntity();
+        UserEntity userEntity = new UserEntity();
         userEntity.setUsername(user.getUsername());
         ClientEntity clientEntity = new ClientEntity();
         clientEntity.setFullName(client.getFullName());
         clientEntity.setPhoneNumber(client.getPhoneNumber());
         clientEntity.setUser(userEntity);
 
-        when(foodOrderingAppUserJpaRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
+        when(userJpaRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
         when(clientJpaRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
-        when(foodOrderingAppUserEntityMapper.mapToEntity(any(FoodOrderingAppUser.class))).thenReturn(userEntity);
-        when(foodOrderingAppUserJpaRepository.save(userEntity)).thenReturn(userEntity);
+        when(userEntityMapper.mapToEntity(any(User.class))).thenReturn(userEntity);
+        when(userJpaRepository.save(userEntity)).thenReturn(userEntity);
         when(clientEntityMapper.mapToEntity(any(Client.class))).thenReturn(clientEntity);
         when(clientJpaRepository.save(clientEntity)).thenReturn(clientEntity);
         when(clientEntityMapper.mapFromEntity(clientEntity)).thenReturn(client);
@@ -137,12 +137,12 @@ class ClientRepositoryTest {
         assertNotNull(savedClient);
         assertEquals(client.getFullName(), savedClient.getFullName());
         assertEquals(client.getPhoneNumber(), savedClient.getPhoneNumber());
-        verify(foodOrderingAppUserJpaRepository).findByUsername(user.getUsername());
+        verify(userJpaRepository).findByUsername(user.getUsername());
         verify(clientJpaRepository).findByUsername(user.getUsername());
         verify(clientJpaRepository).save(clientEntity);
         verify(clientEntityMapper).mapToEntity(client);
         verify(clientEntityMapper).mapFromEntity(clientEntity);
-        verify(foodOrderingAppUserJpaRepository).save(userEntity);
+        verify(userJpaRepository).save(userEntity);
     }
 
 
@@ -175,17 +175,17 @@ class ClientRepositoryTest {
 
     @Test
     void deactivateAccountShouldDisableUser() {
-        when(foodOrderingAppUserJpaRepository.findById(anyLong())).thenReturn(Optional.of(foodOrderingAppUserEntity));
+        when(userJpaRepository.findById(anyLong())).thenReturn(Optional.of(userEntity));
         doAnswer(invocation -> {
-            FoodOrderingAppUserEntity entity = invocation.getArgument(0);
+            UserEntity entity = invocation.getArgument(0);
             assertThat(entity.getEnabled()).isFalse();
             return null;
-        }).when(foodOrderingAppUserJpaRepository).save(any(FoodOrderingAppUserEntity.class));
+        }).when(userJpaRepository).save(any(UserEntity.class));
 
         clientRepository.deactivateAccount(1L);
 
-        verify(foodOrderingAppUserJpaRepository, times(1)).findById(anyLong());
-        verify(foodOrderingAppUserJpaRepository, times(1)).save(any(FoodOrderingAppUserEntity.class));
+        verify(userJpaRepository, times(1)).findById(anyLong());
+        verify(userJpaRepository, times(1)).save(any(UserEntity.class));
     }
     @Test
     void findOrdersByClientIdShouldReturnListOfOrders() {

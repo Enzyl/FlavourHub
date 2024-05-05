@@ -41,7 +41,9 @@ public class SecurityConfiguration {
                                 "/forgotPassword",
                                 "/registration",
                                 "/registerClient",
-                                "/registerOwner")
+                                "/registerOwner",
+                                "/swagger-ui/**",
+                                "/api/**")
                         .permitAll()
                         .anyRequest().authenticated()
                 )

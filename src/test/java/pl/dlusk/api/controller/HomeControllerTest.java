@@ -10,14 +10,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.ui.Model;
-import pl.dlusk.api.dto.ClientDTO;
-import pl.dlusk.api.dto.OwnerDTO;
+import pl.dlusk.api.dto.ClientRegisterRequestDTO;
+import pl.dlusk.api.dto.OwnerRegisterRequestDTO;
 import pl.dlusk.business.RestaurantService;
-import pl.dlusk.domain.Client;
-import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
 import pl.dlusk.domain.Roles;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,14 +66,14 @@ class HomeControllerTest {
     @Test
     void testShowRegisterForms() {
         // Arrange
-        OwnerDTO ownerDTO = OwnerDTO.builder()
+        OwnerRegisterRequestDTO ownerRegisterRequestDTO = OwnerRegisterRequestDTO.builder()
                 .name("")
                 .surname("")
                 .phoneNumber("")
                 .nip("")
                 .regon("")
                 .userDTO(
-                        OwnerDTO.UserDTO.builder()
+                        OwnerRegisterRequestDTO.UserDTO.builder()
                                 .username("")
                                 .password("")
                                 .email("")
@@ -85,11 +82,11 @@ class HomeControllerTest {
                                 .build())
                 .build();
 
-        ClientDTO clientDTO = ClientDTO.builder()
+        ClientRegisterRequestDTO clientRegisterRequestDTO = ClientRegisterRequestDTO.builder()
                 .fullName("")
                 .phoneNumber("")
                 .userDTO(
-                        ClientDTO.UserDTO.builder()
+                        ClientRegisterRequestDTO.UserDTO.builder()
                                 .username("")
                                 .password("")
                                 .email("")
@@ -105,9 +102,9 @@ class HomeControllerTest {
         // Assert
         assertEquals("clientOwnerRegistration", returnedView, "The returned view should be 'clientOwnerRegistration'.");
 
-        verify(model).addAttribute("client", clientDTO);
-        verify(model).addAttribute("owner", ownerDTO);
-        verify(session).setAttribute("owner", ownerDTO);
-        verify(session).setAttribute("client", clientDTO);
+        verify(model).addAttribute("client", clientRegisterRequestDTO);
+        verify(model).addAttribute("owner", ownerRegisterRequestDTO);
+        verify(session).setAttribute("owner", ownerRegisterRequestDTO);
+        verify(session).setAttribute("client", clientRegisterRequestDTO);
     }
 }

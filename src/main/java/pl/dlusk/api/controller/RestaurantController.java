@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,12 +21,10 @@ import pl.dlusk.api.dto.mapper.MenuItemDTOMapper;
 import pl.dlusk.business.*;
 import pl.dlusk.domain.*;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -228,7 +225,7 @@ public class RestaurantController {
             return "redirect:/showRestaurantRegistrationForm";
         }
 
-        Menu menu = menuDTOMapper.convertToMenu(menuDTO, restaurant);
+        Menu menu = menuDTOMapper.mapFromDTO(menuDTO, restaurant);
         Menu savedMenu = restaurantService.addMenu(menu);
         log.info("Menu added: {}", savedMenu);
 
@@ -265,7 +262,7 @@ public class RestaurantController {
         Menu menu = (Menu) session.getAttribute("menuToUpdate");
         Set<MenuItem> menuItems = utilService.getMenuItemsFromSession(session);
         String imageUrl = cloudinaryService.uploadImageAndGetUrl(menuItemDTO.getImage());
-        MenuItem menuItem = menuItemDTOMapper.convertDTOToMenuItem(menuItemDTO, imageUrl, menu);
+        MenuItem menuItem = menuItemDTOMapper.mapDTOtoMenuItem(menuItemDTO, imageUrl, menu);
 
         log.debug("Adding menu item to session: {}", menuItem);
         menuItems.add(menuItem);
@@ -282,7 +279,7 @@ public class RestaurantController {
         Menu menu = (Menu) session.getAttribute("menuToUpdate");
 
         if (menu.getMenuId() == null) {
-            FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
+            User user = (User) session.getAttribute("user");
             Restaurant restaurantByUsername = restaurantService.getRestaurantByUsername(user.getUsername());
             menu = restaurantService.getMenuByRestaurant(restaurantByUsername);
         }
@@ -354,7 +351,7 @@ public class RestaurantController {
         Menu menu = (Menu) session.getAttribute("menu");
         log.info("########## RestaurantController ##### changeMenu # menu: {}", menu);
         if (menu == null) {
-            FoodOrderingAppUser user = (FoodOrderingAppUser) session.getAttribute("user");
+            User user = (User) session.getAttribute("user");
             Restaurant restaurantByUsername = restaurantService.getRestaurantByUsername(user.getUsername());
 
             menu = restaurantService.getMenuByRestaurant(restaurantByUsername);

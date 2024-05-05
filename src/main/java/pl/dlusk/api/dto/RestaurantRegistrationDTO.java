@@ -3,9 +3,15 @@ package pl.dlusk.api.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RestaurantRegistrationDTO {
     @NotBlank(message = "Nazwa restauracji jest wymagana.")
     private String name;

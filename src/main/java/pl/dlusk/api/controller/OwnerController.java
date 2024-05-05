@@ -4,23 +4,19 @@ import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pl.dlusk.api.dto.OwnerDTO;
-import pl.dlusk.api.dto.mapper.OwnerDTOMapper;
+import pl.dlusk.api.dto.OwnerRegisterRequestDTO;
+import pl.dlusk.api.dto.mapper.OwnerRegisterDTOMapper;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.OwnerService;
 import pl.dlusk.business.RestaurantService;
 import pl.dlusk.domain.*;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -30,14 +26,14 @@ public class OwnerController {
     private final OwnerService ownerService;
     private final RestaurantService restaurantService;
     private final FoodOrderService foodOrderService;
-    private final OwnerDTOMapper ownerDTOMapper;
+    private final OwnerRegisterDTOMapper ownerRegisterDTOMapper;
 
     @PostMapping("/registerOwner")
-    public String registerOwner(@ModelAttribute OwnerDTO ownerDTO,
+    public String registerOwner(@ModelAttribute OwnerRegisterRequestDTO ownerRegisterRequestDTO,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
 
-        Owner owner = ownerDTOMapper.mapFromDTO(ownerDTO);
+        Owner owner = ownerRegisterDTOMapper.mapFromDTO(ownerRegisterRequestDTO);
         log.info("########## OwnerController #### registerOwner ### owner: " + owner);
         log.info("########## OwnerController #### registerOwner ### user: " + owner.getUser());
 
@@ -62,7 +58,7 @@ public class OwnerController {
             return "redirect:/login";
         }
 
-        FoodOrderingAppUser user = ownerService.getUserByUsername(username);
+        User user = ownerService.getUserByUsername(username);
         Restaurant restaurant = restaurantService.getRestaurantByUsername(username);
 
         session.setAttribute("user", user);

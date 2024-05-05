@@ -11,14 +11,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pl.dlusk.api.dto.ClientDTO;
+import pl.dlusk.api.dto.ClientRegisterRequestDTO;
 import pl.dlusk.api.dto.DeliveryAddressFormDTO;
-import pl.dlusk.api.dto.mapper.ClientDTOMapper;
+import pl.dlusk.api.dto.mapper.ClientRegisterDTOMapper;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.business.UserService;
 import pl.dlusk.domain.*;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
+import pl.dlusk.infrastructure.security.User;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
 import java.time.LocalDateTime;
@@ -45,7 +45,7 @@ class ClientControllerTest {
 
 
     @Mock
-    private ClientDTOMapper clientDTOMapper;
+    private ClientRegisterDTOMapper clientRegisterDTOMapper;
     @Mock
     private BindingResult bindingResult;
 
@@ -65,29 +65,29 @@ class ClientControllerTest {
     @Test
     void registerClient_Success() {
         // Arrange
-        ClientDTO.UserDTO userDTO = new ClientDTO.UserDTO();
+        ClientRegisterRequestDTO.UserDTO userDTO = new ClientRegisterRequestDTO.UserDTO();
         userDTO.setUsername("testUser");
         userDTO.setPassword("testPass");
         userDTO.setEmail("test@example.com");
         userDTO.setEnabled(true);
         userDTO.setRole(Roles.CLIENT.toString());
 
-        ClientDTO clientDTO = new ClientDTO();
-        clientDTO.setFullName("Test User");
-        clientDTO.setPhoneNumber("1234567890");
-        clientDTO.setUserDTO(userDTO);
+        ClientRegisterRequestDTO clientRegisterRequestDTO = new ClientRegisterRequestDTO();
+        clientRegisterRequestDTO.setFullName("Test User");
+        clientRegisterRequestDTO.setPhoneNumber("1234567890");
+        clientRegisterRequestDTO.setUserDTO(userDTO);
 
         Client client = Client.builder()
-                .fullName(clientDTO.getFullName())
-                .phoneNumber(clientDTO.getPhoneNumber())
-                .user(new FoodOrderingAppUser())
+                .fullName(clientRegisterRequestDTO.getFullName())
+                .phoneNumber(clientRegisterRequestDTO.getPhoneNumber())
+                .user(new User())
                 .build();
 
-        when(clientDTOMapper.mapFromDTO(clientDTO)).thenReturn(client);
+        when(clientRegisterDTOMapper.mapFromDTO(clientRegisterRequestDTO)).thenReturn(client);
         when(clientService.registerClient(client)).thenReturn(client);
 
         // Act
-        String viewName = clientController.registerClient(clientDTO, redirectAttributes);
+        String viewName = clientController.registerClient(clientRegisterRequestDTO, redirectAttributes);
 
         // Assert
         assertEquals("redirect:/registrationSuccessView", viewName);
@@ -98,25 +98,25 @@ class ClientControllerTest {
     @Test
     void registerClient_UsernameAlreadyExistsException() {
         // Arrange
-        ClientDTO.UserDTO userDTO = new ClientDTO.UserDTO();
+        ClientRegisterRequestDTO.UserDTO userDTO = new ClientRegisterRequestDTO.UserDTO();
         userDTO.setUsername("existingUser");
         userDTO.setPassword("testPass");
         userDTO.setEmail("test@example.com");
         userDTO.setEnabled(true);
         userDTO.setRole(Roles.CLIENT.toString());
 
-        ClientDTO clientDTO = new ClientDTO();
-        clientDTO.setFullName("Existing User");
-        clientDTO.setPhoneNumber("1234567890");
-        clientDTO.setUserDTO(userDTO);
+        ClientRegisterRequestDTO clientRegisterRequestDTO = new ClientRegisterRequestDTO();
+        clientRegisterRequestDTO.setFullName("Existing User");
+        clientRegisterRequestDTO.setPhoneNumber("1234567890");
+        clientRegisterRequestDTO.setUserDTO(userDTO);
 
         Client client = Client.builder().build();
 
-        when(clientDTOMapper.mapFromDTO(clientDTO)).thenReturn(client);
+        when(clientRegisterDTOMapper.mapFromDTO(clientRegisterRequestDTO)).thenReturn(client);
         when(clientService.registerClient(client)).thenThrow(new UsernameAlreadyExistsException("Username exists"));
 
         // Act
-        String viewName = clientController.registerClient(clientDTO, redirectAttributes);
+        String viewName = clientController.registerClient(clientRegisterRequestDTO, redirectAttributes);
 
         // Assert
         assertEquals("redirect:/registerClientForm", viewName);
@@ -127,10 +127,10 @@ class ClientControllerTest {
     @Test
     void registerClient_Exception() {
         // Arrange
-        ClientDTO clientDTO = ClientDTO.builder()
+        ClientRegisterRequestDTO clientRegisterRequestDTO = ClientRegisterRequestDTO.builder()
                 .fullName("Faulty User")
                 .phoneNumber("9876543210")
-                .userDTO(ClientDTO.UserDTO.builder()
+                .userDTO(ClientRegisterRequestDTO.UserDTO.builder()
                         .username("faultyUser")
                         .password("badPass")
                         .email("faulty@example.com")
@@ -140,11 +140,11 @@ class ClientControllerTest {
                 .build();
 
         Client client = Client.builder().build();
-        when(clientDTOMapper.mapFromDTO(clientDTO)).thenReturn(client);
+        when(clientRegisterDTOMapper.mapFromDTO(clientRegisterRequestDTO)).thenReturn(client);
         doThrow(new RuntimeException("Unexpected error")).when(clientService).registerClient(client);
 
         // Act
-        String viewName = clientController.registerClient(clientDTO, redirectAttributes);
+        String viewName = clientController.registerClient(clientRegisterRequestDTO, redirectAttributes);
 
         // Assert
         assertEquals("redirect:/registerClientForm", viewName);
@@ -158,7 +158,7 @@ class ClientControllerTest {
         // Arrange
         HttpSession mockSession = Mockito.mock(HttpSession.class);
         String expectedUsername = "testUser";
-        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        User user = new User();
         user.setUsername(expectedUsername);
 
         Mockito.when(mockSession.getAttribute("username")).thenReturn(expectedUsername);
@@ -178,7 +178,7 @@ class ClientControllerTest {
     @Test
     void showUserProfileView_UserAuthenticated() {
         // Arrange
-        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        User user = new User();
         user.setUsername("testUser");
         Client client = Client.builder().build();
 
@@ -210,7 +210,7 @@ class ClientControllerTest {
     @Test
     void showUserProfileView_NoClientFound() {
         // Arrange
-        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        User user = new User();
         user.setUsername("testUser");
 
         when(authentication.getPrincipal()).thenReturn(user);
@@ -369,7 +369,7 @@ class ClientControllerTest {
     @Test
     void showClientOrders_Success() {
         // Arrange
-        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        User user = new User();
         user.setUsername("testUser");
         ClientOrderHistory clientOrderHistory = ClientOrderHistory.builder().build();
         when(session.getAttribute("user")).thenReturn(user);
@@ -386,7 +386,7 @@ class ClientControllerTest {
     @Test
     void showClientOrders_Exception() {
         // Arrange
-        FoodOrderingAppUser user = new FoodOrderingAppUser();
+        User user = new User();
         user.setUsername("testUser");
         when(session.getAttribute("user")).thenReturn(user);
         when(clientService.getClientOrderHistory("testUser")).thenThrow(new RuntimeException("Database error"));
@@ -442,7 +442,7 @@ class ClientControllerTest {
         params.put("user.password", "password123");
         params.put("user.email", "test@example.com");
         params.put("user.enabled", "true");
-        FoodOrderingAppUser expectedUser = FoodOrderingAppUser.builder()
+        User expectedUser = User.builder()
                 .username("testUser")
                 .password("password123")
                 .email("test@example.com")
@@ -452,7 +452,7 @@ class ClientControllerTest {
 
         when(userService.createUserFromParams(params)).thenReturn(expectedUser);
 
-        FoodOrderingAppUser user = userService.createUserFromParams(params);
+        User user = userService.createUserFromParams(params);
 
         assertEquals("testUser", user.getUsername());
         assertEquals("password123", user.getPassword());
@@ -465,7 +465,7 @@ class ClientControllerTest {
     public void testCreateUserFromParams_withMissingParams() {
         Map<String, String> params = new HashMap<>();
         params.put("user.username", "testUser");
-        FoodOrderingAppUser expectedUser = FoodOrderingAppUser.builder()
+        User expectedUser = User.builder()
                 .username("testUser")
                 .password(null)
                 .email(null)
@@ -474,7 +474,7 @@ class ClientControllerTest {
                 .build();
 
         when(userService.createUserFromParams(params)).thenReturn(expectedUser);
-        FoodOrderingAppUser user = userService.createUserFromParams(params);
+        User user = userService.createUserFromParams(params);
 
         assertEquals("testUser", user.getUsername());
         assertNull(user.getPassword());

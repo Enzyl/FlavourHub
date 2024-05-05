@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
+import pl.dlusk.infrastructure.security.UserEntity;
 
 @Data
 @NoArgsConstructor
@@ -34,6 +34,6 @@ public class OwnerEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private FoodOrderingAppUserEntity user;
+    private UserEntity user;
 
 }

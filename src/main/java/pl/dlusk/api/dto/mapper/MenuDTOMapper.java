@@ -8,7 +8,10 @@ import pl.dlusk.domain.Restaurant;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 
 public interface MenuDTOMapper {
-    default Menu convertToMenu(MenuDTO menuDTO, Restaurant restaurant) {
+
+    MenuDTO mapToDTO(Menu menu);
+
+    default Menu mapFromDTO(MenuDTO menuDTO, Restaurant restaurant) {
         return Menu.builder()
                 .name(menuDTO.getName())
                 .description(menuDTO.getDescription())

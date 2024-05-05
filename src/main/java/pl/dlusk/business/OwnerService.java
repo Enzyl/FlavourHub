@@ -8,11 +8,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.OwnerDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
+import pl.dlusk.domain.Client;
 import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserDAO;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserDAO;
+import pl.dlusk.infrastructure.security.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,19 +25,24 @@ public class OwnerService {
 
     private final OwnerDAO ownerDAO;
     private final RestaurantDAO restaurantDAO;
-    private final FoodOrderingAppUserDAO foodOrderingAppUserDAO;
-    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
+    private final UserDAO userDAO;
+    private final UserRepository foodOrderingAppUserRepository;
 
     public List<Owner> getAllOwners() {
         return ownerDAO.findAll();
     }
 
-    public Optional<Owner> getOwnerById(Long ownerId) {
-        return ownerDAO.findById(ownerId);
+    public Owner getOwnerById(Long ownerId) {
+
+        Owner owner = ownerDAO.findById(ownerId)
+                .orElseThrow(() -> new RuntimeException("Owner not found with id: " + ownerId));
+        User user = userDAO.findByOwnerId(ownerId);
+        owner.withUser(user);
+        return owner;
     }
 
     @Transactional
-    public Owner registerOwner(Owner owner, FoodOrderingAppUser user) {
+    public Owner registerOwner(Owner owner, User user) {
         log.info("########## OwnerService #### registerOwner START");
         return ownerDAO.saveOwnerWithUserBefore(owner, user);
     }
@@ -100,8 +106,8 @@ public class OwnerService {
     }
 
 
-    public FoodOrderingAppUser getUserByUsername(String username) {
-        FoodOrderingAppUser userByUsername = foodOrderingAppUserRepository.findByUsername(username);
+    public User getUserByUsername(String username) {
+        User userByUsername = foodOrderingAppUserRepository.findByUsername(username);
         return userByUsername;
     }
 public Owner  getByUsername (String username) {
@@ -110,7 +116,7 @@ public Owner  getByUsername (String username) {
 }
 
     public Owner getAuthenticatedOwner(HttpSession session) {
-        FoodOrderingAppUser appUser = (FoodOrderingAppUser) session.getAttribute("user");
+        User appUser = (User) session.getAttribute("user");
         Long userId = foodOrderingAppUserRepository.findIdByUsername(appUser.getUsername());
         return ownerDAO.findByUserId(userId);
     }

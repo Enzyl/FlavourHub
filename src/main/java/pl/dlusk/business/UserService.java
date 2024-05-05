@@ -3,16 +3,16 @@ package pl.dlusk.business;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.dlusk.domain.Roles;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserRepository;
 
 import java.util.Map;
 @Service
 @AllArgsConstructor
 public class UserService {
-    private final FoodOrderingAppUserRepository foodOrderingAppUserRepository;
-    public FoodOrderingAppUser createUserFromParams(Map<String, String> params) {
-        return FoodOrderingAppUser.builder()
+    private final UserRepository foodOrderingAppUserRepository;
+    public User createUserFromParams(Map<String, String> params) {
+        return User.builder()
                 .username(params.get("user.username"))
                 .password(params.get("user.password"))
                 .email(params.get("user.email"))
@@ -20,8 +20,8 @@ public class UserService {
                 .enabled(Boolean.parseBoolean(params.get("user.enabled")))
                 .build();
     }
-    public FoodOrderingAppUser getUserByUsername(String username) {
-        FoodOrderingAppUser user = foodOrderingAppUserRepository.findByUsername(username);
+    public User getUserByUsername(String username) {
+        User user = foodOrderingAppUserRepository.findByUsername(username);
         return user;
     }
 

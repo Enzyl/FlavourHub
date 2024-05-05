@@ -7,14 +7,15 @@ import org.springframework.stereotype.Repository;
 import pl.dlusk.business.dao.ClientDAO;
 import pl.dlusk.domain.Client;
 import pl.dlusk.domain.FoodOrder;
+import pl.dlusk.domain.Roles;
 import pl.dlusk.infrastructure.database.entity.ClientEntity;
 import pl.dlusk.infrastructure.database.repository.jpa.ClientJpaRepository;
 import pl.dlusk.infrastructure.database.repository.mapper.ClientEntityMapper;
 import pl.dlusk.infrastructure.database.repository.mapper.FoodOrderEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUser;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntity;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserEntityMapper;
-import pl.dlusk.infrastructure.security.FoodOrderingAppUserJpaRepository;
+import pl.dlusk.infrastructure.security.User;
+import pl.dlusk.infrastructure.security.UserEntity;
+import pl.dlusk.infrastructure.security.UserEntityMapper;
+import pl.dlusk.infrastructure.security.UserJpaRepository;
 import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException;
 
 import java.util.Collections;
@@ -26,35 +27,35 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ClientRepository implements ClientDAO {
     private final ClientJpaRepository clientJpaRepository;
-    private final FoodOrderingAppUserJpaRepository foodOrderingAppUserJpaRepository; // Dodano UserRepository
+    private final UserJpaRepository userJpaRepository; // Dodano UserRepository
     private final ClientEntityMapper clientEntityMapper;
     private final FoodOrderEntityMapper foodOrderEntityMapper;
-    private final FoodOrderingAppUserEntityMapper foodOrderingAppUserEntityMapper;
+    private final UserEntityMapper userEntityMapper;
 
     @Override
     public Client save(Client client) {
         log.info("########## ClientRepository #### save #  Client: " + client.toString());
         log.info("########## ClientRepository #### save #  FoodOrderingAppUser: " + client.getUser().toString());
-        FoodOrderingAppUser user = client.getUser();
-        Optional<FoodOrderingAppUserEntity> existingUser = foodOrderingAppUserJpaRepository.findByUsername(user.getUsername());
+        User user = client.getUser();
+        Optional<UserEntity> existingUser = userJpaRepository.findByUsername(user.getUsername());
         log.info("########## ClientRepository #### save #  existingUser " + existingUser);
         Optional<ClientEntity> clientByUsername = clientJpaRepository.findByUsername(user.getUsername());
 
         if (existingUser.isPresent()) {
             log.info("########## ClientRepository #### save #  existingUser.isPresent(): " + existingUser.isPresent());
             throw new UsernameAlreadyExistsException(user.getUsername());
-
         }
 
         if (clientByUsername.isPresent()) {
             log.info("########## ClientRepository #### save #  existingClientById.isPresent(): " + clientByUsername.isPresent());
-
             throw new UsernameAlreadyExistsException(client.getFullName());
         }
         log.info("########## ClientRepository #### save #  ALL OK I GUESS: " );
 
-        FoodOrderingAppUserEntity userEntity = foodOrderingAppUserEntityMapper.mapToEntity(user);
-        FoodOrderingAppUserEntity savedUserEntity = foodOrderingAppUserJpaRepository.save(userEntity);
+        UserEntity userEntity = userEntityMapper.mapToEntity(user);
+        userEntity.setRole(Roles.CLIENT.toString());
+        UserEntity savedUserEntity = userJpaRepository.save(userEntity);
+
         log.info("########## ClientRepository #### save #  userEntity {} ",userEntity );
         log.info("########## ClientRepository #### save #  userEntity {}",savedUserEntity );
 
@@ -83,9 +84,13 @@ public class ClientRepository implements ClientDAO {
 
     @Override
     public List<Client> findAll() {
-        return clientJpaRepository.findAll().stream()
+        log.info("########## ClientRepo #### findAll #  START ");
+
+        List<Client> collect = clientJpaRepository.findAll().stream()
                 .map(clientEntityMapper::mapFromEntity)
                 .collect(Collectors.toList());
+        System.out.println(collect);
+        return collect;
     }
 
     @Override
@@ -95,10 +100,10 @@ public class ClientRepository implements ClientDAO {
 
     @Override
     public void deactivateAccount(Long userId) {
-        FoodOrderingAppUserEntity userEntity = foodOrderingAppUserJpaRepository.findById(userId)
+        UserEntity userEntity = userJpaRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
         userEntity.setEnabled(false);
-        foodOrderingAppUserJpaRepository.save(userEntity);
+        userJpaRepository.save(userEntity);
     }
 
     @Override
@@ -112,6 +117,13 @@ public class ClientRepository implements ClientDAO {
     @Override
     public Client findClientByUsername(String username) {
         ClientEntity clientEntity = clientJpaRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        return clientEntityMapper.mapFromEntity(clientEntity);
+    }
+
+    @Override
+    public Client findByClientId(Long clientId) {
+        ClientEntity clientEntity = clientJpaRepository.findById(clientId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + clientId));
         return clientEntityMapper.mapFromEntity(clientEntity);
     }
 

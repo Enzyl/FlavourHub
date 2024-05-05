@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeliveryStreetDTO {
-    private String streetName;
-    private String postalCode;
-    private String district;
+public class RestaurantDTO {
+    String name;
+    String description;
 }
