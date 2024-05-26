@@ -443,7 +443,7 @@ class RestaurantControllerTest {
         Menu expectedMenu = Menu.builder()
                 .name("Italian") // Set a name for the menu
                 .build();
-        MenuDTO menuDTO = new MenuDTO("Italian", "");
+        MenuDTO menuDTO = new MenuDTO("Italian", "", null);
         Restaurant restaurant = Restaurant.builder().build();
         when(restaurantService.getCurrentRestaurant(session)).thenReturn(restaurant);
 
@@ -485,7 +485,7 @@ class RestaurantControllerTest {
     @Test
     public void addMenuToTheRestaurant_withNoRestaurantInSession_redirectsWithError() {
         // Arrange
-        MenuDTO menuDTO = new MenuDTO("Summer Menu", "");
+        MenuDTO menuDTO = new MenuDTO("Summer Menu", "", null);
         when(restaurantService.getCurrentRestaurant(session)).thenReturn(null);
         when(result.hasErrors()).thenReturn(false);
 

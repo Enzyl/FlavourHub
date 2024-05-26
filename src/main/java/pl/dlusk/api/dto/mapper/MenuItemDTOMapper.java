@@ -1,7 +1,6 @@
 package pl.dlusk.api.dto.mapper;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import pl.dlusk.api.dto.MenuItemDTO;
 import pl.dlusk.domain.Menu;

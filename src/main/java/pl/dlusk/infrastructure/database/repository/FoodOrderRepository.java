@@ -197,7 +197,6 @@ public class FoodOrderRepository implements FoodOrderDAO {
         }
         FoodOrder foodOrder = foodOrderEntityMapper.mapFromEntity(foodOrderEntityOpt.get());
 
-
         return orderItemEntities.stream()
                 .map(orderItemEntity -> {
                     MenuItem menuItem = menuItemEntityMapper.mapFromEntity(orderItemEntity.getMenuItemEntity());

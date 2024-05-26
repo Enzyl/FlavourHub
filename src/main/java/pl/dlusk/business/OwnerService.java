@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.OwnerDAO;
 import pl.dlusk.business.dao.RestaurantDAO;
-import pl.dlusk.domain.Client;
 import pl.dlusk.domain.Owner;
 import pl.dlusk.domain.Restaurant;
 import pl.dlusk.infrastructure.security.User;

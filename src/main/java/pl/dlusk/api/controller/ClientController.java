@@ -25,6 +25,7 @@ import pl.dlusk.infrastructure.security.exception.UsernameAlreadyExistsException
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Controller
@@ -144,7 +145,7 @@ public class ClientController {
         String uniqueFoodNumber = (String) session.getAttribute("uniqueFoodNumber");
         if (uniqueFoodNumber == null) {
             model.addAttribute("errorMessage", "No order found to display.");
-            return "errorPage";  // Redirect to a generic error page or order not found page
+            return "errorPage";
         }
 
         FoodOrder foodOrder = foodOrderService.showOrderSummary(uniqueFoodNumber);
@@ -152,6 +153,7 @@ public class ClientController {
             model.addAttribute("errorMessage", "Order details could not be retrieved.");
             return "errorPage";
         }
+        log.info("########## ClientController #### showOrderSummary # foodOrder: " + foodOrder);
 
         model.addAttribute("foodOrderWithOrderItems", foodOrder);
         return "orderSummaryView";

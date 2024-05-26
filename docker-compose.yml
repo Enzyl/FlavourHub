@@ -1,0 +1,40 @@
+version: '3.1'
+services:
+  backend:
+    build: .
+    image: zajavka/moja-apka:1.0
+    container_name: my_final_project-backend
+    ports:
+      - 8190:8190
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://PostgreSQL:5432/food_ordering_app
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    networks:
+      - spring-boot-postgres
+    depends_on:
+      PostgreSQL:
+        condition: service_healthy
+  PostgreSQL:
+    image: postgres:15.0
+    container_name: postgresql
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=food_ordering_app
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - spring-boot-postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+volumes:
+  db-data:
+networks:
+  spring-boot-postgres:

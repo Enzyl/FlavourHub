@@ -4,9 +4,9 @@ import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
-import pl.dlusk.business.dao.PaymentDAO;
-import pl.dlusk.business.dao.RestaurantDAO;
-import pl.dlusk.domain.*;
+import pl.dlusk.domain.Menu;
+import pl.dlusk.domain.MenuItem;
+import pl.dlusk.domain.Restaurant;
 import pl.dlusk.domain.shoppingCart.ShoppingCart;
 
 import java.math.BigDecimal;

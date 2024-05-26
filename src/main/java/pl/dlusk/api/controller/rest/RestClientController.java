@@ -5,14 +5,15 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import pl.dlusk.api.dto.ClientDTO;
+import pl.dlusk.api.dto.ClientOrderHistoryDTO;
 import pl.dlusk.api.dto.ClientRegisterRequestDTO;
 import pl.dlusk.api.dto.ClientsDTO;
 import pl.dlusk.api.dto.mapper.ClientDTOMapper;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
+import pl.dlusk.api.dto.mapper.ClientOrderHistoryDTOMapper;
 import pl.dlusk.business.ClientService;
 import pl.dlusk.business.FoodOrderService;
 import pl.dlusk.domain.Client;
@@ -40,44 +41,45 @@ public class RestClientController {
     private final ClientDTOMapper clientDTOMapper;
     private final FoodOrderService foodOrderService;
     private final ClientJpaRepository clientJpaRepository;
-
+    private final ClientOrderHistoryDTOMapper clientOrderHistoryDTOMapper;
     @PostMapping("orders/{orderId}/cancel")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         FoodOrder foodOrder = foodOrderService.getFoodOrderById(orderId);
 
         if (foodOrder == null) {
-            return ResponseEntity.notFound().build(); // Return 404 Not Found if order not found
+            return ResponseEntity.notFound().build();
         }
 
         if (Duration.between(foodOrder.getOrderTime(), LocalDateTime.now()).toMinutes() <= 20) {
             foodOrderService.updateFoodOrderStatus(orderId, FoodOrderStatus.CANCELLED.toString());
-            return ResponseEntity.ok().build(); // Return 200 OK on successful cancellation
+            return ResponseEntity.ok().build();
         } else {
-            return ResponseEntity.badRequest().build(); // Return 400 Bad Request if cancellation window has passed
+            return ResponseEntity.badRequest().build();
         }
     }
-    @GetMapping("/{clientId}/orders/history")
-    public ResponseEntity<String> getClientOrderHistory(HttpSession session) {
-        User user = (User) session.getAttribute("user");
+    @GetMapping("/{username}/orders/history")
+    public ResponseEntity<ClientOrderHistoryDTO> getClientOrderHistory(@PathVariable String username) {
 
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Unauthorized if no user found in session
+        log.info("########## RestClientController #### getClientOrderHistory #  START ");
+
+
+        Client client = clientService.getClientByUsername(username);
+        if (client == null) {
+            log.info("########## RestClientController #### getClientOrderHistory #  NIE ZNALEZIONO KLIENTA");
+            return ResponseEntity.notFound().build();
         }
 
-        String username = user.getUsername();
-        ClientOrderHistory clientOrderHistory;
-        try {
-            clientOrderHistory = clientService.getClientOrderHistory(username);
 
-            // Use ObjectMapper to convert ClientOrderHistory to JSON string
-            ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(clientOrderHistory);
-
-            return ResponseEntity.ok(json); // Return 200 OK with JSON response body
-        } catch (Exception e) {
-            log.error("Error retrieving orders for user {}: {}", username, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Internal server error on unexpected exceptions
+        ClientOrderHistory clientOrderHistory = clientService.getClientOrderHistory(username);
+        log.info("########## RestClientController #### getClientOrderHistory #  clientOrderHistory {}", clientOrderHistory);
+        if (clientOrderHistory.getCustomerFoodOrders().isEmpty()) {
+            log.info("########## RestClientController #### getClientOrderHistory #  NIE ZNALEZIONO ZAMOWIEN");
+            return ResponseEntity.noContent().build();
         }
+
+        ClientOrderHistoryDTO clientOrderHistoryDTO = clientOrderHistoryDTOMapper.mapToDTO(clientOrderHistory);
+        log.info("########## RestClientController ##### getClientOrderHistory ### clientOrderHistoryDTO: " + clientOrderHistoryDTO);
+        return ResponseEntity.ok(clientOrderHistoryDTO);
     }
 
     @GetMapping("{clientId}")
@@ -132,9 +134,9 @@ public class RestClientController {
                 .build();
         Client registeredClient = clientService.registerClient(client);
         log.info("KLIENT ZAREJESTROWANY POMYŚLNIE ZAJEBIIIŚCIE");
-        URI location = URI.create("/api/v1/clients/" + registeredClient.getClientId()); // Fixed URI
+        URI location = URI.create("/api/v1/clients/" + registeredClient.getClientId());
 
-        return ResponseEntity.created(location).body(registeredClient); // Correct response usage
+        return ResponseEntity.created(location).body(registeredClient);
     }
 
 

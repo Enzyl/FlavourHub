@@ -6,7 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pl.dlusk.business.dao.ClientDAO;
 import pl.dlusk.business.dao.FoodOrderDAO;
-import pl.dlusk.domain.*;
+import pl.dlusk.domain.Client;
+import pl.dlusk.domain.ClientOrderHistory;
+import pl.dlusk.domain.FoodOrder;
+import pl.dlusk.domain.OrderItem;
 import pl.dlusk.infrastructure.security.User;
 import pl.dlusk.infrastructure.security.UserDAO;
 

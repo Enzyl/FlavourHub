@@ -98,13 +98,16 @@ public class FoodOrderService {
         FoodOrder foodOrder = foodOrderDAO.findFoodOrderByFoodOrderNumber(foodOrderNumber);
         if (foodOrder != null) {
             Set<OrderItem> orderItems = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrder.getFoodOrderId());
-            foodOrder.withOrderItems(orderItems);
+            foodOrder = foodOrder.withOrderItems(orderItems);
         }
+        log.info("########## FoodOrderService #### findFoodOrderByOrderNumber # foodOrder: " + foodOrder);
+
         return foodOrder;
     }
 
     public Set<OrderItem> findOrderItemsByFoodOrderId(Long foodOrderId){
         Set<OrderItem> orderItemsByFoodOrderId = foodOrderDAO.findOrderItemsByFoodOrderId(foodOrderId);
+
         return orderItemsByFoodOrderId;
     }
 

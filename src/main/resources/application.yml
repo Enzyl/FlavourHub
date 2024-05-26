@@ -1,14 +1,13 @@
 server:
   port: 8190
 
-
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5433/food_ordering_app_postgre_15
+    url: jdbc:postgresql://localhost:5432/food_ordering_app
     username: postgres
-    password: postgre
+    password: postgres
     hikari:
       idle-timeout: 10000
       connectionTimeout: 20000

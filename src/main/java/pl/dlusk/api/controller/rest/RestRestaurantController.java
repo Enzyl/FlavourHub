@@ -1,6 +1,5 @@
 package pl.dlusk.api.controller.rest;
 
-import com.electronwill.nightconfig.core.conversion.Path;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -66,6 +65,7 @@ public class RestRestaurantController {
     public ResponseEntity<MenuDTO> getMenuForRestaurant(@PathVariable Long restaurantId) {
         try {
             Menu menuForRestaurantWithMenuItems = restaurantService.getMenuForRestaurantWithMenuItems(restaurantId);
+            log.info("########## RestRestaurantController ##### getMenuForRestaurant ###  menuForRestaurantWithMenuItems: " + menuForRestaurantWithMenuItems);
             MenuDTO menuDTO = menuDTOMapper.mapToDTO(menuForRestaurantWithMenuItems);
             return ResponseEntity.ok(menuDTO);
         } catch (Exception e) {

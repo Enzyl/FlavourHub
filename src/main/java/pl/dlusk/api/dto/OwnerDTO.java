@@ -1,7 +1,6 @@
 package pl.dlusk.api.dto;
 
 import lombok.*;
-import pl.dlusk.infrastructure.security.User;
 
 @Data
 @With
