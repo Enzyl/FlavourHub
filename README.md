@@ -37,12 +37,12 @@ Welcome to FlavourHub! This is a Java-based web application built with Spring Bo
 * git clone https://github.com/Enzyl/FlavourHub.git
 * cd FlavourHub
 ## Build the Application
-* ./gradlew clean build -x test
+* gradlew.bat clean build -x test
 
 ## Running with Docker
 To start the application using Docker, run the following command:
-* docker-compose up
-This will start both the backend application and the PostgreSQL database.
+* docker-compose up -d (if u want to run app with logs, delete "-d")
+### This will start both the backend application and the PostgreSQL database.
 
 # Accessing the Application
 Once the application is running, you can access it at:
