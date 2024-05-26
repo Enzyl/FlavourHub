@@ -34,8 +34,8 @@ Welcome to FlavourHub! This is a Java-based web application built with Spring Bo
 * Docker
 
 ## Clone the Repository
-* git clone https://github.com/Enzyl/My_Final_Project.git
-* cd My_Final_Project
+* git clone https://github.com/Enzyl/FlavourHub.git
+* cd FlavourHub
 ## Build the Application
 * ./gradlew clean build -x test
 
