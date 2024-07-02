@@ -39,7 +39,6 @@
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                         <a class="dropdown-item" th:href="@{/ownerProfile}">Profil użytkownika</a>
-                        <a class="dropdown-item" th:href="@{/ownerOrders}">Zamówienia</a>
                         <a class="dropdown-item" th:href="@{/logout}">Wyloguj</a>
                     </div>
                 </li>
@@ -61,7 +60,7 @@
     </div>
 </div>
 
-<!-- Sekcja Menu -->
+
 <div class="container menu-section">
     <h2>Menu</h2>
     <div th:if="${#lists.isEmpty(menu.menuItems)}">

@@ -16,16 +16,14 @@
     </div>
 
     <div class="text-center mt-4">
-        <!-- Formularz do przesłania żądania POST do /processOrder -->
+
         <form th:action="@{/clientLoggedInView}" method="get">
 
-        <!-- Tutaj mogą być umieszczone ukryte pola, jeśli potrzebujesz przesłać dodatkowe dane, na przykład: -->
-            <!-- <input type="hidden" name="menuItemsIds" value="..." /> -->
-            <!-- <input type="hidden" name="quantities" value="..." /> -->
+
             <button type="submit" class="btn btn-primary">Back to Home</button>
         </form>
 
-        <!-- Guzik "Pokaż atrybuty sesji" -->
+
         <a th:href="@{/sessionAttributes}" class="btn btn-info">Pokaż atrybuty sesji</a>
     </div>
 </div>

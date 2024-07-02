@@ -42,7 +42,7 @@ dependencies {
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springDocOpenApiVersion}"
     implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
     implementation "javax.annotation:javax.annotation-api:${javaxAnnotationApiVersion}"
-    // implementation "io.swagger:swagger-annotations:${swaggerAnnotationsVersion}" // opcjonalnie, jeśli wymagane
+     implementation "io.swagger:swagger-annotations:${swaggerAnnotationsVersion}"
 
     // warning: unknown enum constant When.MAYBE
     // reason: class file for javax.annotation.meta.When not found

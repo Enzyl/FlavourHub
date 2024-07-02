@@ -12,7 +12,7 @@
 
 
 
-        <!-- Formularz rejestracji klienta -->
+
         <div class="col-md-6">
             <h3>Rejestracja Klienta</h3>
             <form th:action="@{/registerClient}" th:object="${client}" method="post">
@@ -44,7 +44,6 @@
 
 
 
-        <!-- Formularz rejestracji właściciela -->
         <div class="col-md-6">
             <h3>Rejestracja Właściciela</h3>
             <form th:action="@{/registerOwner}" th:object="${owner}" method="post">
@@ -66,13 +65,14 @@
 
                 <div class="form-group">
                     <label for="nip">NIP:</label>
-                    <input type="text" id="nip" class="form-control" th:field="*{nip}" required>
+                    <input type="text" id="nip" class="form-control" th:field="*{nip}" required pattern="\d{10}" title="NIP powinien składać się z 10 cyfr">
                 </div>
 
                 <div class="form-group">
                     <label for="regon">REGON:</label>
-                    <input type="text" id="regon" class="form-control" th:field="*{regon}" required>
+                    <input type="text" id="regon" class="form-control" th:field="*{regon}" required pattern="\d{9}|\d{14}" title="REGON powinien składać się z 9 lub 14 cyfr">
                 </div>
+
 
                 <div class="form-group">
                     <label for="username">Nazwa Użytkownika:</label>
@@ -89,10 +89,9 @@
                     <input type="password" id="password" class="form-control" th:field="*{userDTO.password}" required>
                 </div>
 
-                <!-- Pola formularza właściciela -->
                 <input type="hidden" th:field="*{userDTO.role}" th:value="'OWNER'"/>
                 <input type="hidden" th:field="*{userDTO.enabled}" th:value="true"/>
-                <!-- Zawartość formularza właściciela z Twojego kodu -->
+
                 <button type="submit" class="btn btn-primary">Zarejestruj Właściciela</button>
             </form>
         </div>

@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
 @Slf4j
 @Configuration
 @EnableWebSecurity
@@ -29,6 +30,7 @@ public class SecurityConfiguration {
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -43,6 +45,10 @@ public class SecurityConfiguration {
                                 "/registerClient",
                                 "/registerOwner",
                                 "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/swagger-ui.html",
                                 "/api/**")
                         .permitAll()
                         .anyRequest().authenticated()
@@ -65,7 +71,7 @@ public class SecurityConfiguration {
         http.csrf()
                 .disable()
                 .authorizeHttpRequests()
-                . anyRequest()
+                .anyRequest()
                 .permitAll();
 
         return http.build();

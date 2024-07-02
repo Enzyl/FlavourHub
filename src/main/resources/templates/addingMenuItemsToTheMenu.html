@@ -14,7 +14,7 @@
 <div class="container mt-5">
     <h2>Aktualna zawartość menu</h2>
     <h3 th:text="${menu.name} + ' - ' + ${menu.description}"></h3>
-    <!-- Lista dań zgrupowanych po kategoriach -->
+
     <div th:if="${groupedMenuItems != null}">
         <h4>Dania w menu:</h4>
         <div th:each="itemsEntry : ${groupedMenuItems.entrySet()}">
@@ -28,11 +28,11 @@
     <div th:if="${groupedMenuItems == null or groupedMenuItems.empty}">
         <p>Menu jest obecnie puste. Dodaj dania, aby je uzupełnić.</p>
     </div>
-    <!-- Przycisk wywołujący formularz -->
+
     <button class="btn btn-primary" onclick="showForm()">Dodaj kolejne danie</button>
     <a th:href="@{/addAllMenuItemsToMenu}" class="btn btn-secondary">Zakończ dodawanie dań do menu</a>
 
-    <!-- Ukryty formularz -->
+
     <div class="hidden-form" id="addMenuItemForm">
         <h4>Dodaj nowe danie do menu</h4>
         <form th:action="@{/addMenuItemToMenu}" method="post" enctype="multipart/form-data">

@@ -1,4 +1,4 @@
-<!-- registerClient.html -->
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -32,7 +32,7 @@
             <input type="email" class="form-control" id="email" th:field="*{user.email}" required/>
         </div>
 
-        <!-- Ukryte pola dla domyślnych wartości -->
+
         <input type="hidden" th:field="*{user.role}" th:value="'ROLE_USER'"/>
         <input type="hidden" th:field="*{user.enabled}" th:value="true"/>
 

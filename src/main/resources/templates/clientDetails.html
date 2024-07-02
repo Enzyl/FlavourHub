@@ -6,24 +6,24 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #f8f9fa; /* Jasnoszary tło dla kontrastu */
+            background-color: #f8f9fa;
         }
         .container {
-            max-width: 600px; /* Ograniczenie szerokości kontenera */
+            max-width: 600px;
         }
         .card {
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); /* Lekkie cieniowanie dla karty */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
         .card-header {
-            background-color: #007bff; /* Niebieski kolor nagłówka */
-            color: #ffffff; /* Biały tekst */
+            background-color: #007bff;
+            color: #ffffff;
             font-weight: bold;
         }
         .card-title {
-            color: #007bff; /* Niebieski kolor dla tytułów sekcji */
+            color: #007bff;
         }
         .card-text > span {
-            color: #555; /* Ciemniejszy szary dla tekstu */
+            color: #555;
         }
     </style>
 </head>
@@ -43,7 +43,7 @@
             <p class="card-text">Full Name: <span th:text="${client.fullName}">Full Name</span></p>
             <p class="card-text">Phone Number: <span th:text="${client.phoneNumber}">Phone Number</span></p>
 
-            <!-- Przycisk "Powrót do strony głównej" -->
+
             <div class="text-center mt-4">
                 <a th:href="@{/clientLoggedInView}" class="btn btn-primary">Powrót do strony głównej</a>
             </div>

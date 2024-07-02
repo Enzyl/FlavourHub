@@ -32,7 +32,6 @@ public class RestaurantRepository implements RestaurantDAO {
     private final RestaurantAddressJpaRepository restaurantAddressJpaRepository;
     private final RestaurantAddressEntityMapper restaurantAddressEntityMapper;
 
-    private final OwnerJpaRepository ownerJpaRepository;
     private final OwnerEntityMapper ownerEntityMapper;
 
     private final MenuJpaRepository menuJpaRepository;
@@ -48,7 +47,6 @@ public class RestaurantRepository implements RestaurantDAO {
     private final ReviewEntityMapper reviewEntityMapper;
 
     private final FoodOrderJpaRepository foodOrderJpaRepository;
-    private final FoodOrderEntityMapper foodOrderEntityMapper;
 
     private final RestaurantDeliveryStreetEntityMapper restaurantDeliveryStreetEntityMapper;
     private final RestaurantDeliveryStreetJpaRepository restaurantDeliveryStreetJpaRepository;

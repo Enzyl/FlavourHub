@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ClientRepository implements ClientDAO {
     private final ClientJpaRepository clientJpaRepository;
-    private final UserJpaRepository userJpaRepository; // Dodano UserRepository
+    private final UserJpaRepository userJpaRepository;
     private final ClientEntityMapper clientEntityMapper;
     private final FoodOrderEntityMapper foodOrderEntityMapper;
     private final UserEntityMapper userEntityMapper;
