@@ -19,7 +19,7 @@ Welcome to FlavourHub! This is a Java-based web application built with Spring Bo
 * Gradle
 * Lombok
 * MapStruct
-* Hibernate Validator
+* Hibernate
 * Flyway
 * TestContainers
 * Mockito
