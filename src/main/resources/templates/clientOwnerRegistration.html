@@ -60,7 +60,7 @@
 
                 <div class="form-group">
                     <label for="phoneNumber">Numer Telefonu:</label>
-                    <input type="text" id="phoneNumber" class="form-control" th:field="*{phoneNumber}" required>
+                    <input type="text" id="phoneNumber" class="form-control" th:field="*{phoneNumber}" required pattern="^\d{9}$" title="Numer telefonu powinien składać się z 9 cyfr">
                 </div>
 
                 <div class="form-group">
@@ -72,7 +72,6 @@
                     <label for="regon">REGON:</label>
                     <input type="text" id="regon" class="form-control" th:field="*{regon}" required pattern="\d{9}|\d{14}" title="REGON powinien składać się z 9 lub 14 cyfr">
                 </div>
-
 
                 <div class="form-group">
                     <label for="username">Nazwa Użytkownika:</label>
@@ -95,6 +94,7 @@
                 <button type="submit" class="btn btn-primary">Zarejestruj Właściciela</button>
             </form>
         </div>
+
     </div>
 </div>
 
