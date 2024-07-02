@@ -1,6 +1,7 @@
 package pl.dlusk.api.controller;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,7 +35,7 @@ public class OwnerController {
     private final OwnerRegisterDTOMapper ownerRegisterDTOMapper;
 
     @PostMapping("/registerOwner")
-    public String registerOwner(@ModelAttribute OwnerRegisterRequestDTO ownerRegisterRequestDTO,
+    public String registerOwner(@Valid @ModelAttribute OwnerRegisterRequestDTO ownerRegisterRequestDTO,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
 

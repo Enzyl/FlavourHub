@@ -1,6 +1,7 @@
 package pl.dlusk.api.controller;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -97,7 +98,7 @@ public class ClientController {
 
 
     @PostMapping("/submitDeliveryAddress")
-    public String submitDeliveryAddress(@ModelAttribute DeliveryAddressFormDTO form, BindingResult bindingResult, HttpSession session) {
+    public String submitDeliveryAddress(@Valid @ModelAttribute DeliveryAddressFormDTO form, BindingResult bindingResult, HttpSession session) {
         log.info("Submitting delivery address");
         if (bindingResult.hasErrors()) {
             return "deliveryAddressView";
