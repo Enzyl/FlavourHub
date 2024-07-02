@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class ClientRegisterRequestDTO {
     String fullName;
     @NotBlank
-    @Pattern(regexp = "\\d{9}", message = "NIP should consist of exactly 10 digits")
+    @Pattern(regexp = "\\d{9}", message = "Phone number should have 9 digits")
     String phoneNumber;
     UserDTO userDTO;
 
